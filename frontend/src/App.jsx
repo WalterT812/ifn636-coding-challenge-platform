@@ -28,6 +28,13 @@ const activity = [
   'Admin login reviewed from Australia',
 ]
 
+const userRows = [
+  { name: 'Walter Tang', email: 'walter@example.com', role: 'Super Admin', status: 'Active' },
+  { name: 'Mary Chen', email: 'mary@example.com', role: 'Admin', status: 'Active' },
+  { name: 'John Liu', email: 'john@example.com', role: 'User', status: 'Pending' },
+  { name: 'Alice Wang', email: 'alice@example.com', role: 'User', status: 'Inactive' },
+]
+
 function App() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [message, setMessage] = useState('')
@@ -113,7 +120,12 @@ function App() {
             >
               Challenges
             </button>
-            <button className="nav-item">Users</button>
+            <button
+              className={`nav-item ${activeView === 'users' ? 'active' : ''}`}
+              onClick={() => setActiveView('users')}
+            >
+              Users
+            </button>
             <button className="nav-item">Reports</button>
           </nav>
 
@@ -217,6 +229,45 @@ function App() {
                     <button className="secondary-button">View details</button>
                   </article>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {activeView === 'users' && (
+            <section className="user-view">
+              <div className="challenge-header">
+                <div>
+                  <p className="eyebrow">User management</p>
+                  <h2>Users</h2>
+                </div>
+                <button className="primary-button">Add user</button>
+              </div>
+
+              <div className="panel user-panel">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userRows.map((userItem) => (
+                      <tr key={userItem.email}>
+                        <td>{userItem.name}</td>
+                        <td>{userItem.email}</td>
+                        <td>{userItem.role}</td>
+                        <td>
+                          <span className={`status status-${userItem.status.toLowerCase()}`}>
+                            {userItem.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </section>
           )}
