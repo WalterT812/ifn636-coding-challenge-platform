@@ -137,6 +137,7 @@ function App() {
       return (
         <Challenges
           onLogout={handleLogout}
+          onUnauthorized={handleLogout}
           page={learnerPages[path]}
           onOpenPage={(name) => {
             const urls = {

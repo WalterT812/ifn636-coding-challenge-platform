@@ -6,6 +6,7 @@ const { permissions } = require('../permissions');
 
 const router = express.Router();
 const canManageChallenges = requireRole(...permissions.challengeManagement);
+const canViewPublished = requireRole(...permissions.learnerChallenges);
 
 async function nextChallengeNumber() {
     const last = await Challenge.findOne({ challengeNumber: { $exists: true } })
@@ -59,6 +60,21 @@ function draftFields(body) {
 
     return data;
 }
+
+// learner list: only published, not draft or closed
+router.get('/published', auth, canViewPublished, async (req, res) => {
+    try {
+        const challenges = await Challenge.find({ status: 'PUBLISHED' })
+            .select('-reviewCriteria')
+            .populate('createdBy', 'username')
+            .sort({ publishedAt: -1 });
+
+        return res.json(challenges);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load challenges' });
+    }
+});
 
 // admin list: drafts, published and closed
 router.get('/', auth, canManageChallenges, async (req, res) => {
