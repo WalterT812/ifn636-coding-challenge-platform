@@ -81,7 +81,7 @@ router.post('/', auth, canManageChallenges, async (req, res) => {
             ...draftFields(req.body),
             challengeNumber: await nextChallengeNumber(),
             createdBy: req.user.userId,
-            status: req.body.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT',
+            status: 'DRAFT',
         });
 
         return res.status(201).json(challenge);
@@ -91,41 +91,59 @@ router.post('/', auth, canManageChallenges, async (req, res) => {
     }
 });
 
-// save again, or publish / close
+// save fields only, do not change status here
 router.put('/:id', auth, canManageChallenges, async (req, res) => {
     try {
+        const challenge = await Challenge.findByIdAndUpdate(
+            req.params.id,
+            draftFields(req.body),
+            { new: true, runValidators: true }
+        ).populate('createdBy', 'username');
+
+        if (!challenge) {
+            return res.status(404).json({ message: 'Challenge not found' });
+        }
+
+        return res.json(challenge);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot update challenge' });
+    }
+});
+
+// ADMIN / ADMIN_MANAGER only: DRAFT -> PUBLISHED, PUBLISHED -> CLOSED
+router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
+    try {
+        const nextStatus = req.body.status;
         const challenge = await Challenge.findById(req.params.id);
 
         if (!challenge) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
-        // only ADMIN / ADMIN_MANAGER can reach here; SUPER_ADMIN is blocked
-        if (req.body.status === 'CLOSED') {
+        if (nextStatus === 'PUBLISHED') {
+            if (challenge.status !== 'DRAFT') {
+                return res.status(400).json({ message: 'Only a draft can be published' });
+            }
+
+            challenge.status = 'PUBLISHED';
+        } else if (nextStatus === 'CLOSED') {
             if (challenge.status !== 'PUBLISHED') {
                 return res.status(400).json({ message: 'Only a published challenge can be closed' });
             }
 
             // close is allowed even if submissions already exist
             challenge.status = 'CLOSED';
-            await challenge.save();
-            await challenge.populate('createdBy', 'username');
-            return res.json(challenge);
+        } else {
+            return res.status(400).json({ message: 'Status must be PUBLISHED or CLOSED' });
         }
 
-        const updates = draftFields(req.body);
-
-        if (req.body.status === 'PUBLISHED') {
-            updates.status = 'PUBLISHED';
-        }
-
-        Object.assign(challenge, updates);
         await challenge.save();
         await challenge.populate('createdBy', 'username');
         return res.json(challenge);
     } catch (error) {
         console.error(error.message);
-        return res.status(400).json({ message: 'Cannot update challenge' });
+        return res.status(400).json({ message: 'Cannot update status' });
     }
 });
 

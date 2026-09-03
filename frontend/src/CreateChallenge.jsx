@@ -87,14 +87,29 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
     })
   }
 
-  const saveChallenge = async (status) => {
+  const handleApiError = (response, data, fallback) => {
+    if (response.status === 403) {
+      onForbidden()
+      return true
+    }
+
+    if (response.status === 401) {
+      onUnauthorized()
+      return true
+    }
+
+    if (!response.ok) {
+      setMessage(data.message || fallback)
+      return true
+    }
+
+    return false
+  }
+
+  const saveChallenge = async () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
     const body = {
       keywords: form.keywords,
-    }
-
-    if (status) {
-      body.status = status
     }
 
     requiredFields.forEach((name) => {
@@ -119,18 +134,27 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
 
     const data = await response.json()
 
-    if (response.status === 403) {
-      onForbidden()
+    if (handleApiError(response, data, 'Cannot create challenge')) {
       return null
     }
 
-    if (response.status === 401) {
-      onUnauthorized()
-      return null
-    }
+    return data
+  }
 
-    if (!response.ok) {
-      setMessage(data.message || 'Cannot create challenge')
+  const updateStatus = async (id, nextStatus) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    const response = await fetch('http://localhost:5001/api/challenges/' + id + '/status', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({ status: nextStatus }),
+    })
+
+    const data = await response.json()
+
+    if (handleApiError(response, data, 'Cannot update status')) {
       return null
     }
 
@@ -160,14 +184,21 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
     setMessage('')
 
     try {
-      const data = await saveChallenge('PUBLISHED')
+      const saved = await saveChallenge()
+
+      if (!saved) {
+        return
+      }
+
+      setSavedId(saved._id)
+      setChallengeNumber(saved.challengeNumber)
+
+      const data = await updateStatus(saved._id, 'PUBLISHED')
 
       if (!data) {
         return
       }
 
-      setSavedId(data._id)
-      setChallengeNumber(data.challengeNumber)
       setStatus(data.status)
       setMessage('Challenge published')
     } catch (error) {
@@ -185,7 +216,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
     setMessage('')
 
     try {
-      const data = await saveChallenge('CLOSED')
+      const data = await updateStatus(savedId, 'CLOSED')
 
       if (!data) {
         return
