@@ -23,6 +23,12 @@ function CreateChallenge({ onLogout, onBack }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
+  const publisher = localStorage.getItem('username') || sessionStorage.getItem('username') || ''
+  const createdDate = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value })
@@ -189,6 +195,20 @@ function CreateChallenge({ onLogout, onBack }) {
               onChange={(event) => updateField('expectedResult', event.target.value)}
             />
             {errors.expectedResult && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            {/* taken from the person who logged in */}
+            <input
+              type="text"
+              value={'Publisher: ' + (publisher || 'Unknown')}
+              disabled
+            />
+          </div>
+
+          <div className="field">
+            {/* shown as today; the database also stores createdAt */}
+            <input type="text" value={'Date: ' + createdDate} disabled />
           </div>
         </div>
       </div>

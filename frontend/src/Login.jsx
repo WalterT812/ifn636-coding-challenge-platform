@@ -32,7 +32,7 @@ function Login({ onLogin }) {
 
       // login ok, go to dashboard
       // also tell App if remember me is ticked
-      onLogin(data.token, rememberMe)
+      onLogin(data.token, rememberMe, data.user.username)
     } catch (error) {
       setMessage('Cannot connect to server')
     }

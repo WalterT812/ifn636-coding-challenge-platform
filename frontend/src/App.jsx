@@ -9,24 +9,27 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!savedToken)
   const [page, setPage] = useState('dashboard')
 
-  const handleLogin = (token, rememberMe) => {
-    // tick remember me = keep login after I close the browser
+  const handleLogin = (token, rememberMe, username) => {
     if (rememberMe) {
       localStorage.setItem('token', token)
+      localStorage.setItem('username', username)
       sessionStorage.removeItem('token')
+      sessionStorage.removeItem('username')
     } else {
-      // no tick = login is gone when I close the tab
       sessionStorage.setItem('token', token)
+      sessionStorage.setItem('username', username)
       localStorage.removeItem('token')
+      localStorage.removeItem('username')
     }
 
     setIsLoggedIn(true)
   }
 
   const handleLogout = () => {
-    // delete token from both places
     localStorage.removeItem('token')
+    localStorage.removeItem('username')
     sessionStorage.removeItem('token')
+    sessionStorage.removeItem('username')
     setPage('dashboard')
     setIsLoggedIn(false)
   }

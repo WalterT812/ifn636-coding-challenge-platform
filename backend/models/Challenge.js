@@ -58,7 +58,7 @@ const challengeSchema = new mongoose.Schema(
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // which admin created it
+            ref: 'User', // who published it, set from the login token
         },
     },
     {
