@@ -153,17 +153,16 @@ function App() {
   }
 
   const path = window.location.pathname
-  const publicPaths = ['/', '/login', '/register']
 
   if (path === '/register') {
     return <Register onLogin={handleLogin} />
   }
 
-  if (path === '/login' || !publicPaths.includes(path)) {
-    return <LearnerLogin onLogin={handleLogin} />
+  if (path === '/admin') {
+    return <Login onLogin={handleLogin} />
   }
 
-  return <Login onLogin={handleLogin} />
+  return <LearnerLogin onLogin={handleLogin} />
 }
 
 export default App
