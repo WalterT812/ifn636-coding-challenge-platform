@@ -86,30 +86,14 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
     })
   }
 
-  // only publish needs every box filled
-  const handlePublish = () => {
-    const nextErrors = {}
-
-    requiredFields.forEach((name) => {
-      if (!String(form[name]).trim()) {
-        nextErrors[name] = true
-      }
-    })
-
-    if (form.keywords.length === 0) {
-      nextErrors.keywords = true
-    }
-
-    setErrors(nextErrors)
-  }
-
-  const saveDraft = async () => {
-    setErrors({})
-    setMessage('')
-
+  const saveChallenge = async (status) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
     const body = {
       keywords: form.keywords,
+    }
+
+    if (status) {
+      body.status = status
     }
 
     requiredFields.forEach((name) => {
@@ -123,30 +107,80 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
       ? 'http://localhost:5001/api/challenges/' + savedId
       : 'http://localhost:5001/api/challenges'
 
+    const response = await fetch(url, {
+      method: isEdit ? 'PUT' : 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify(body),
+    })
+
+    const data = await response.json()
+
+    if (response.status === 403) {
+      onForbidden()
+      return null
+    }
+
+    if (response.status === 401) {
+      onUnauthorized()
+      return null
+    }
+
+    if (!response.ok) {
+      setMessage(data.message || 'Cannot create challenge')
+      return null
+    }
+
+    return data
+  }
+
+  // only publish needs every box filled
+  const handlePublish = async () => {
+    const nextErrors = {}
+
+    requiredFields.forEach((name) => {
+      if (!String(form[name]).trim()) {
+        nextErrors[name] = true
+      }
+    })
+
+    if (form.keywords.length === 0) {
+      nextErrors.keywords = true
+    }
+
+    setErrors(nextErrors)
+
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
+    setMessage('')
+
     try {
-      const response = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + token,
-        },
-        body: JSON.stringify(body),
-      })
+      const data = await saveChallenge('PUBLISHED')
 
-      const data = await response.json()
-
-      if (response.status === 403) {
-        onForbidden()
+      if (!data) {
         return
       }
 
-      if (response.status === 401) {
-        onUnauthorized()
-        return
-      }
+      setSavedId(data._id)
+      setChallengeNumber(data.challengeNumber)
+      setMessage('Challenge published')
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
 
-      if (!response.ok) {
-        setMessage(data.message || 'Cannot create challenge')
+  const saveDraft = async () => {
+    setErrors({})
+    setMessage('')
+
+    try {
+      const data = await saveChallenge()
+
+      if (!data) {
         return
       }
 

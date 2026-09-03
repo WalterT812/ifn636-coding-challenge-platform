@@ -49,6 +49,11 @@ function draftFields(body) {
         data.tier = Number(body.tier);
     }
 
+    // publish action: draft becomes PUBLISHED
+    if (body.status === 'PUBLISHED') {
+        data.status = 'PUBLISHED';
+    }
+
     return data;
 }
 
