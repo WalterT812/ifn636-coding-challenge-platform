@@ -1,64 +1,12 @@
-import { useEffect, useState } from 'react'
-import './App.css'
-
-const stats = [
-  { label: 'Total users', value: '1,248', change: '+12%' },
-  { label: 'Active challenges', value: '24', change: '+4' },
-  { label: 'Submissions', value: '486', change: '+18%' },
-  { label: 'Pass rate', value: '78%', change: '+2%' },
-]
-
-const challengeRows = [
-  { name: 'JavaScript Basics', status: 'Open', progress: '82%' },
-  { name: 'React Dashboard', status: 'Review', progress: '63%' },
-  { name: 'Node API', status: 'Closed', progress: '95%' },
-  { name: 'Database Design', status: 'Open', progress: '58%' },
-]
-
-const challengeCards = [
-  { title: 'JavaScript Basics', level: 'Beginner', type: 'Frontend', status: 'Open', due: '2 days left' },
-  { title: 'React Dashboard', level: 'Intermediate', type: 'Frontend', status: 'Review', due: '5 days left' },
-  { title: 'Node API', level: 'Advanced', type: 'Backend', status: 'Closed', due: 'Completed' },
-  { title: 'Database Design', level: 'Intermediate', type: 'Database', status: 'Open', due: '4 days left' },
-]
-
-const activity = [
-  'New challenge published this week',
-  '3 users submitted code for review',
-  'Admin login reviewed from Australia',
-]
-
-const userRows = [
-  { name: 'Walter Tang', email: 'walter@example.com', role: 'Super Admin', status: 'Active' },
-  { name: 'Mary Chen', email: 'mary@example.com', role: 'Admin', status: 'Active' },
-  { name: 'John Liu', email: 'john@example.com', role: 'User', status: 'Pending' },
-  { name: 'Alice Wang', email: 'alice@example.com', role: 'User', status: 'Inactive' },
-]
+import { useState } from 'react'
 
 function App() {
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [loginName, setLoginName] = useState('')
+  const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [user, setUser] = useState(null)
-  const [activeView, setActiveView] = useState('overview')
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      setIsLoggedIn(true)
-      setUser({ username: 'Super Admin' })
-    }
-  }, [])
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault()
-    setLoading(true)
     setMessage('')
 
     try {
@@ -67,256 +15,62 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          email: loginName,
+          password: password,
+        }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
+        setMessage(data.message || 'Invalid email or password')
+        return
       }
 
       localStorage.setItem('token', data.token)
-      setUser({ username: data.user.username || 'Admin' })
-      setIsLoggedIn(true)
       setMessage('Login successful')
     } catch (error) {
-      setMessage(error.message)
-    } finally {
-      setLoading(false)
+      setMessage('Cannot connect to server')
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    setIsLoggedIn(false)
-    setUser(null)
-    setActiveView('overview')
-    setMessage('Logged out')
-  }
-
-  if (isLoggedIn) {
-    return (
-      <div className="dashboard-page">
-        <aside className="sidebar">
-          <div className="brand-row">
-            <div className="brand-mark">C</div>
-            <div>
-              <p className="eyebrow">IFN636</p>
-              <h2>CCP</h2>
-            </div>
-          </div>
-
-          <nav className="nav">
-            <button
-              className={`nav-item ${activeView === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveView('overview')}
-            >
-              Overview
-            </button>
-            <button
-              className={`nav-item ${activeView === 'challenges' ? 'active' : ''}`}
-              onClick={() => setActiveView('challenges')}
-            >
-              Challenges
-            </button>
-            <button
-              className={`nav-item ${activeView === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveView('users')}
-            >
-              Users
-            </button>
-            <button className="nav-item">Reports</button>
-          </nav>
-
-          <button className="logout-button" onClick={handleLogout}>Log out</button>
-        </aside>
-
-        <main className="main-panel">
-          <header className="topbar">
-            <div>
-              <p className="eyebrow">Welcome back</p>
-              <h1>{user?.username || 'Admin'}</h1>
-            </div>
-            <button className="primary-button">New challenge</button>
-          </header>
-
-          {activeView === 'overview' && (
-            <>
-              <section className="stats-grid">
-                {stats.map((item) => (
-                  <article key={item.label} className="stat-card">
-                    <p>{item.label}</p>
-                    <h3>{item.value}</h3>
-                    <span>{item.change}</span>
-                  </article>
-                ))}
-              </section>
-
-              <section className="content-grid">
-                <div className="panel">
-                  <div className="panel-header">
-                    <h3>Challenge progress</h3>
-                    <span>Last 7 days</span>
-                  </div>
-
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Progress</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {challengeRows.map((row) => (
-                        <tr key={row.name}>
-                          <td>{row.name}</td>
-                          <td>
-                            <span className={`status status-${row.status.toLowerCase()}`}>
-                              {row.status}
-                            </span>
-                          </td>
-                          <td>{row.progress}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="panel">
-                  <div className="panel-header">
-                    <h3>Recent activity</h3>
-                    <span>Live</span>
-                  </div>
-
-                  <ul className="activity-list">
-                    {activity.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            </>
-          )}
-
-          {activeView === 'challenges' && (
-            <section className="challenge-view">
-              <div className="challenge-header">
-                <div>
-                  <p className="eyebrow">Challenge hub</p>
-                  <h2>All challenges</h2>
-                </div>
-                <button className="primary-button">Create challenge</button>
-              </div>
-
-              <div className="challenge-grid">
-                {challengeCards.map((challenge) => (
-                  <article key={challenge.title} className="challenge-card">
-                    <div className="challenge-top">
-                      <span className={`chip chip-${challenge.status.toLowerCase()}`}>
-                        {challenge.status}
-                      </span>
-                      <span className="challenge-due">{challenge.due}</span>
-                    </div>
-
-                    <h3>{challenge.title}</h3>
-                    <div className="meta-row">
-                      <span>{challenge.level}</span>
-                      <span>{challenge.type}</span>
-                    </div>
-
-                    <button className="secondary-button">View details</button>
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeView === 'users' && (
-            <section className="user-view">
-              <div className="challenge-header">
-                <div>
-                  <p className="eyebrow">User management</p>
-                  <h2>Users</h2>
-                </div>
-                <button className="primary-button">Add user</button>
-              </div>
-
-              <div className="panel user-panel">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {userRows.map((userItem) => (
-                      <tr key={userItem.email}>
-                        <td>{userItem.name}</td>
-                        <td>{userItem.email}</td>
-                        <td>{userItem.role}</td>
-                        <td>
-                          <span className={`status status-${userItem.status.toLowerCase()}`}>
-                            {userItem.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-        </main>
-      </div>
-    )
-  }
-
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="brand-block">
-          <span className="brand-tag">IFN636</span>
-          <h1>CCP Portal</h1>
-          <p>Sign in to your coding challenge platform.</p>
+    <div>
+      <h1>Coding Challenge Platform Admin Portal</h1>
+
+      <form className="login-box" onSubmit={handleLogin}>
+        <h2>Admin Login</h2>
+
+        <label>Email or Username:</label>
+        <input
+          type="text"
+          value={loginName}
+          onChange={(event) => setLoginName(event.target.value)}
+          required
+        />
+
+        <label>Password:</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+
+        <div className="row">
+          <label>
+            <input type="checkbox" /> Remember Me
+          </label>
+          <span className="link">Forgot Password?</span>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label>
-            <span>Email</span>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="admin@ifn636.local"
-              required
-            />
-          </label>
+        <button type="submit">Login</button>
 
-          <label>
-            <span>Password</span>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Enter password"
-              required
-            />
-          </label>
+        {message && <p className="message">{message}</p>}
 
-          <button type="submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-
-          {message && <p className="status-message">{message}</p>}
-        </form>
-      </div>
+        <p className="note">Only authorised Admin accounts can log in.</p>
+      </form>
     </div>
   )
 }
