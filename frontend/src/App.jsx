@@ -62,7 +62,7 @@ function App() {
           <label>
             <input type="checkbox" /> Remember Me
           </label>
-          <span className="link">Forgot Password?</span>
+          <button type="button" className="link">Forgot Password?</button>
         </div>
 
         <button type="submit">Login</button>
