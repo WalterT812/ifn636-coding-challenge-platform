@@ -1,12 +1,11 @@
 const express = require('express');
 const Challenge = require('../models/Challenge');
 const auth = require('../middleware/auth');
+const requireRole = require('../middleware/requireRole');
+const { permissions } = require('../permissions');
 
 const router = express.Router();
-
-function canManageChallenges(role) {
-    return role === 'ADMIN' || role === 'ADMIN_MANAGER';
-}
+const canManageChallenges = requireRole(...permissions.challengeManagement);
 
 async function nextChallengeNumber() {
     const count = await Challenge.countDocuments();
@@ -54,12 +53,8 @@ function draftFields(body) {
 }
 
 // admin list: drafts, published and closed
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, canManageChallenges, async (req, res) => {
     try {
-        if (!canManageChallenges(req.user.role)) {
-            return res.status(401).json({ message: 'Only admin can view challenges' });
-        }
-
         const challenges = await Challenge.find()
             .populate('createdBy', 'username')
             .sort({ createdAt: -1 });
@@ -72,12 +67,8 @@ router.get('/', auth, async (req, res) => {
 });
 
 // save a new draft
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, canManageChallenges, async (req, res) => {
     try {
-        if (!canManageChallenges(req.user.role)) {
-            return res.status(401).json({ message: 'Only admin can create a challenge' });
-        }
-
         const challenge = await Challenge.create({
             ...draftFields(req.body),
             challengeNumber: await nextChallengeNumber(),
@@ -93,12 +84,8 @@ router.post('/', auth, async (req, res) => {
 });
 
 // save again on the same draft
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, canManageChallenges, async (req, res) => {
     try {
-        if (!canManageChallenges(req.user.role)) {
-            return res.status(401).json({ message: 'Only admin can create a challenge' });
-        }
-
         const challenge = await Challenge.findByIdAndUpdate(
             req.params.id,
             draftFields(req.body),

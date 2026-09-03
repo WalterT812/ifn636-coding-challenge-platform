@@ -41,7 +41,7 @@ function formFromChallenge(challenge) {
   }
 }
 
-function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challenge }) {
+function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challenge, onForbidden, onUnauthorized }) {
   const [form, setForm] = useState(() => formFromChallenge(challenge))
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
@@ -134,6 +134,16 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
       })
 
       const data = await response.json()
+
+      if (response.status === 403) {
+        onForbidden()
+        return
+      }
+
+      if (response.status === 401) {
+        onUnauthorized()
+        return
+      }
 
       if (!response.ok) {
         setMessage(data.message || 'Cannot create challenge')

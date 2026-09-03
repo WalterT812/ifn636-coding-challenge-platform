@@ -12,7 +12,7 @@ function formatDate(value) {
   })
 }
 
-function ChallengeList({ onLogout, onOpenDashboard, onCreate, onOpenChallenge }) {
+function ChallengeList({ onLogout, onOpenDashboard, onCreate, onOpenChallenge, onForbidden, onUnauthorized }) {
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
 
@@ -28,6 +28,16 @@ function ChallengeList({ onLogout, onOpenDashboard, onCreate, onOpenChallenge })
         })
 
         const data = await response.json()
+
+        if (response.status === 403) {
+          onForbidden()
+          return
+        }
+
+        if (response.status === 401) {
+          onUnauthorized()
+          return
+        }
 
         if (!response.ok) {
           setMessage(data.message || 'Cannot load challenges')
