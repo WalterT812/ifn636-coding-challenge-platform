@@ -41,7 +41,9 @@ const challengeSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['DRAFT', 'PUBLISHED', 'CLOSED'], // draft until publish
+            enum: ['DRAFT', 'PUBLISHED', 'CLOSED'],
+            // CLOSED: hide from learner list/search, no new submissions
+            // keep old submissions, reviews and progress for history
             default: 'DRAFT',
         },
         challengeNumber: {

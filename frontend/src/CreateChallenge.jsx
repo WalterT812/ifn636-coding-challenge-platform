@@ -198,6 +198,53 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
     }
   }
 
+  const handleDiscard = async () => {
+    if (status !== 'DRAFT') {
+      return
+    }
+
+    if (!savedId) {
+      onBack()
+      return
+    }
+
+    setMessage('')
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+
+    try {
+      const response = await fetch('http://localhost:5001/api/challenges/' + savedId, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.status === 403) {
+        onForbidden()
+        return
+      }
+
+      if (response.status === 401) {
+        onUnauthorized()
+        return
+      }
+
+      if (!response.ok) {
+        setMessage(data.message || 'Cannot discard draft')
+        return
+      }
+
+      setSavedId('')
+      setChallengeNumber('Auto')
+      onBack()
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
   const saveDraft = async () => {
     setErrors({})
     setMessage('')
@@ -391,6 +438,11 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
         {status === 'DRAFT' && (
           <button type="button" className="btn-secondary" onClick={saveDraft}>
             Save Draft
+          </button>
+        )}
+        {status === 'DRAFT' && (
+          <button type="button" className="btn-cancel" onClick={handleDiscard}>
+            Discard Draft
           </button>
         )}
         {status === 'DRAFT' && (
