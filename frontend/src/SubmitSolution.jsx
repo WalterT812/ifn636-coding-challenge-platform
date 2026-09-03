@@ -9,7 +9,7 @@ function isHttpUrl(value) {
   }
 }
 
-function SubmitSolution({ challengeId, onUnauthorized }) {
+function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
   const [form, setForm] = useState({
     repoUrl: '',
     commitUrl: '',
@@ -98,6 +98,10 @@ function SubmitSolution({ challengeId, onUnauthorized }) {
         explanation: '',
         testEvidence: '',
       })
+
+      if (onSubmitted) {
+        onSubmitted()
+      }
     } catch (error) {
       setMessage('Cannot connect to server')
     }

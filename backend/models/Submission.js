@@ -42,7 +42,8 @@ const submissionSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['SUBMITTED', 'UNDER_REVIEW'],
+            // cancelled stays in history, it is not deleted
+            enum: ['SUBMITTED', 'UNDER_REVIEW', 'PASSED', 'FAILED', 'CANCELLED'],
             default: 'SUBMITTED',
         },
         selectedForReview: {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SubmitSolution from './SubmitSolution.jsx'
+import AttemptHistory from './AttemptHistory.jsx'
 
 function formatDate(value) {
   if (!value) {
@@ -13,9 +14,10 @@ function formatDate(value) {
   })
 }
 
-function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound }) {
+function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound, onOpenAttempt }) {
   const [challenge, setChallenge] = useState(null)
   const [message, setMessage] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -85,7 +87,20 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound }) {
       )}
 
       {challenge && (
-        <SubmitSolution challengeId={challenge._id} onUnauthorized={onUnauthorized} />
+        <AttemptHistory
+          challengeId={challenge._id}
+          refreshKey={refreshKey}
+          onUnauthorized={onUnauthorized}
+          onOpenAttempt={onOpenAttempt}
+        />
+      )}
+
+      {challenge && (
+        <SubmitSolution
+          challengeId={challenge._id}
+          onUnauthorized={onUnauthorized}
+          onSubmitted={() => setRefreshKey(refreshKey + 1)}
+        />
       )}
     </div>
   )

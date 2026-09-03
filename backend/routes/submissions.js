@@ -106,4 +106,41 @@ router.post('/', auth, canSubmit, async (req, res) => {
     }
 });
 
+// learner can only see their own attempts, including cancelled
+router.get('/', auth, canSubmit, async (req, res) => {
+    try {
+        const filter = { learner: req.user.userId };
+
+        if (req.query.challengeId) {
+            filter.challenge = req.query.challengeId;
+        }
+
+        const submissions = await Submission.find(filter)
+            .populate('challenge', 'challengeNumber title')
+            .sort({ submittedAt: -1 });
+
+        return res.json(submissions);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load attempts' });
+    }
+});
+
+router.get('/:id', auth, canSubmit, async (req, res) => {
+    try {
+        const submission = await Submission.findOne({
+            _id: req.params.id,
+            learner: req.user.userId,
+        }).populate('challenge', 'challengeNumber title');
+
+        if (!submission) {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        return res.json(submission);
+    } catch (error) {
+        return res.status(404).json({ message: 'Attempt not found' });
+    }
+});
+
 module.exports = router;

@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import BrowseChallenges from './BrowseChallenges.jsx'
 import ChallengeDetail from './ChallengeDetail.jsx'
+import AttemptHistory from './AttemptHistory.jsx'
+import AttemptDetail from './AttemptDetail.jsx'
 import NotFound from './NotFound.jsx'
 
-function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId }) {
+function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
   const titles = {
     progress: 'Progress',
-    history: 'History',
     browsing: 'Browsing History',
   }
   const [challengeMissing, setChallengeMissing] = useState(false)
+  const [attemptMissing, setAttemptMissing] = useState(false)
 
   useEffect(() => {
     setChallengeMissing(false)
-  }, [challengeId, page])
+    setAttemptMissing(false)
+  }, [challengeId, attemptId, page])
 
   return (
     <div>
@@ -55,10 +58,32 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId })
           onUnauthorized={onUnauthorized}
           onNotFound={() => setChallengeMissing(true)}
           onBack={() => onOpenPage('challenges')}
+          onOpenAttempt={(id) => onOpenPage('attempt', id)}
         />
       ) : null}
 
-      {page !== 'challenges' && page !== 'detail' ? (
+      {page === 'history' ? (
+        <AttemptHistory
+          showChallenge
+          onUnauthorized={onUnauthorized}
+          onOpenAttempt={(id) => onOpenPage('attempt', id)}
+        />
+      ) : null}
+
+      {page === 'attempt' && attemptMissing ? (
+        <NotFound onHome={() => onOpenPage('history')} />
+      ) : null}
+
+      {page === 'attempt' && !attemptMissing ? (
+        <AttemptDetail
+          attemptId={attemptId}
+          onUnauthorized={onUnauthorized}
+          onNotFound={() => setAttemptMissing(true)}
+          onBack={() => onOpenPage('history')}
+        />
+      ) : null}
+
+      {page !== 'challenges' && page !== 'detail' && page !== 'history' && page !== 'attempt' ? (
         <h1 className="page-title">{titles[page]}</h1>
       ) : null}
     </div>

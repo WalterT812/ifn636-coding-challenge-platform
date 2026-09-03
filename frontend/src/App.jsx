@@ -134,14 +134,16 @@ function App() {
     }
 
     const challengeId = path.startsWith('/challenges/') ? path.slice('/challenges/'.length) : ''
+    const attemptId = path.startsWith('/attempts/') ? path.slice('/attempts/'.length) : ''
 
-    if (learnerPages[path] || challengeId) {
+    if (learnerPages[path] || challengeId || attemptId) {
       return (
         <Challenges
           onLogout={handleLogout}
           onUnauthorized={handleLogout}
-          page={challengeId ? 'detail' : learnerPages[path]}
+          page={attemptId ? 'attempt' : challengeId ? 'detail' : learnerPages[path]}
           challengeId={challengeId}
+          attemptId={attemptId}
           onOpenPage={(name, id) => {
             const urls = {
               challenges: '/',
@@ -149,6 +151,7 @@ function App() {
               history: '/history',
               browsing: '/browsing-history',
               detail: '/challenges/' + id,
+              attempt: '/attempts/' + id,
             }
             navigate(urls[name])
           }}
