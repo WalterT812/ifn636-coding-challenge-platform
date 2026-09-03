@@ -19,6 +19,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState('')
   const [locked, setLocked] = useState(false)
+  const [lockMessage, setLockMessage] = useState('')
 
   useEffect(() => {
     const loadLock = async () => {
@@ -42,7 +43,19 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
         }
 
         if (response.ok) {
-          setLocked(data.some((item) => item.status === 'UNDER_REVIEW'))
+          if (data.some((item) => item.status === 'UNDER_REVIEW')) {
+            setLocked(true)
+            setLockMessage('This attempt is under review. You cannot submit or cancel it.')
+          } else if (data.some((item) => item.status === 'ACCEPTED')) {
+            setLocked(true)
+            setLockMessage('This challenge is already completed')
+          } else if (data.some((item) => item.status === 'FINAL_FAILED')) {
+            setLocked(true)
+            setLockMessage('No more attempts are allowed')
+          } else {
+            setLocked(false)
+            setLockMessage('')
+          }
         }
       } catch (error) {
         setLocked(false)
@@ -62,7 +75,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
     setMessage('')
 
     if (locked) {
-      setMessage('This attempt is under review. You cannot submit or cancel it.')
+      setMessage(lockMessage)
       return
     }
 
@@ -199,9 +212,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
         Submit Attempt
       </button>
 
-      {locked && (
-        <p className="form-message">This attempt is under review. You cannot submit or cancel it.</p>
-      )}
+      {locked && lockMessage ? <p className="form-message">{lockMessage}</p> : null}
 
       {message && <p className="form-message">{message}</p>}
     </form>

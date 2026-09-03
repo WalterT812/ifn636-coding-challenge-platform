@@ -43,7 +43,16 @@ const submissionSchema = new mongoose.Schema(
         status: {
             type: String,
             // cancelled stays in history, it is not deleted
-            enum: ['SUBMITTED', 'UNDER_REVIEW', 'PASSED', 'FAILED', 'CANCELLED'],
+            enum: [
+                'SUBMITTED',
+                'UNDER_REVIEW',
+                'PASSED',
+                'FAILED',
+                'CANCELLED',
+                'ACCEPTED',
+                'REVISION_REQUIRED',
+                'FINAL_FAILED',
+            ],
             default: 'SUBMITTED',
         },
         selectedForReview: {
@@ -54,6 +63,16 @@ const submissionSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User', // admin who claimed this attempt
             default: null,
+        },
+        decision: {
+            type: String,
+            enum: ['PASS', 'REVISION_REQUIRED'],
+        },
+        feedback: {
+            type: String,
+        },
+        reviewedAt: {
+            type: Date,
         },
     },
     {

@@ -19,6 +19,18 @@ function statusLabel(status) {
     return 'Under Review'
   }
 
+  if (status === 'ACCEPTED' || status === 'PASSED') {
+    return 'Accepted'
+  }
+
+  if (status === 'REVISION_REQUIRED') {
+    return 'Revision Required'
+  }
+
+  if (status === 'FINAL_FAILED' || status === 'FAILED') {
+    return 'Final Failed'
+  }
+
   return 'Pending'
 }
 
@@ -41,6 +53,9 @@ function ReviewQueue({
   const [attempt, setAttempt] = useState(null)
   const [reviewers, setReviewers] = useState([])
   const [nextReviewerId, setNextReviewerId] = useState('')
+  const [decision, setDecision] = useState('PASS')
+  const [feedback, setFeedback] = useState('')
+  const [feedbackError, setFeedbackError] = useState('')
   const [message, setMessage] = useState('')
   const username = getSaved('username')
   const role = getSaved('role')
@@ -172,6 +187,11 @@ function ReviewQueue({
       }
 
       if (!response.ok) {
+        if (data.feedback) {
+          setFeedbackError(data.feedback)
+          return
+        }
+
         setMessage(data.message || 'Cannot update review')
         return
       }
@@ -226,6 +246,12 @@ function ReviewQueue({
             <p>Commit Link: {attempt.commitUrl}</p>
             <p>Explanation: {attempt.explanation}</p>
             <p>Test Evidence: {attempt.testEvidence}</p>
+            {attempt.decision ? (
+              <div>
+                <p>Decision: {attempt.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</p>
+                <p>Feedback: {attempt.feedback}</p>
+              </div>
+            ) : null}
           </div>
 
           {attempt.status === 'SUBMITTED' ? (
@@ -240,15 +266,58 @@ function ReviewQueue({
             </div>
           ) : null}
 
-          {attempt.status === 'UNDER_REVIEW' && isReviewer ? (
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => sendAction('review-queue/' + attempt._id + '/release')}
+          {attempt.status === 'UNDER_REVIEW' && isReviewer && !attempt.decision ? (
+            <div>
+              <form
+                className="submit-box"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  setFeedbackError('')
+
+                  if (!feedback.trim()) {
+                    setFeedbackError('This field is required')
+                    return
+                  }
+
+                  sendAction('review-queue/' + attempt._id + '/decision', {
+                    decision,
+                    feedback: feedback.trim(),
+                  })
+                }}
               >
-                Release Review
-              </button>
+                <h2>Submit Review</h2>
+                <div className="field">
+                  <label>Decision:</label>
+                  <select value={decision} onChange={(event) => setDecision(event.target.value)}>
+                    <option value="PASS">PASS</option>
+                    <option value="REVISION_REQUIRED">REVISION REQUIRED</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Feedback:</label>
+                  <textarea
+                    className={feedbackError ? 'box-medium input-error' : 'box-medium'}
+                    value={feedback}
+                    onChange={(event) => {
+                      setFeedback(event.target.value)
+                      setFeedbackError('')
+                    }}
+                  />
+                  {feedbackError ? <p className="field-error">{feedbackError}</p> : null}
+                </div>
+                <button type="submit" className="btn-primary">
+                  Submit Decision
+                </button>
+              </form>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => sendAction('review-queue/' + attempt._id + '/release')}
+                >
+                  Release Review
+                </button>
+              </div>
             </div>
           ) : null}
 

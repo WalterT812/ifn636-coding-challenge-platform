@@ -6,6 +6,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
+const { sendReviewEmail } = require('../utils/sendMail');
 
 const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
@@ -13,7 +14,7 @@ const canReview = requireRole(...permissions.reviewQueue);
 
 const waitingForReview = {
     selectedForReview: true,
-    status: { $nin: ['CANCELLED', 'PASSED', 'FAILED'] },
+    status: { $nin: ['CANCELLED', 'PASSED', 'FAILED', 'ACCEPTED', 'REVISION_REQUIRED', 'FINAL_FAILED'] },
 };
 
 function isHttpUrl(value) {
@@ -71,6 +72,14 @@ router.post('/', auth, canSubmit, async (req, res) => {
             learner: req.user.userId,
             challenge: challenge._id,
         });
+
+        if (existing.some((item) => item.status === 'ACCEPTED')) {
+            return res.status(400).json({ message: 'This challenge is already completed' });
+        }
+
+        if (existing.some((item) => item.status === 'FINAL_FAILED')) {
+            return res.status(400).json({ message: 'No more attempts are allowed' });
+        }
 
         if (existing.length >= 10) {
             return res.status(400).json({ message: 'You can submit at most 10 attempts' });
@@ -131,15 +140,12 @@ router.get('/review-queue', auth, canReview, async (req, res) => {
 
 router.get('/review-queue/:id', auth, canReview, async (req, res) => {
     try {
-        const submission = await Submission.findOne({
-            _id: req.params.id,
-            ...waitingForReview,
-        })
+        const submission = await Submission.findById(req.params.id)
             .populate('challenge', 'challengeNumber title')
-            .populate('learner', 'username')
+            .populate('learner', 'username email')
             .populate('reviewer', 'username role');
 
-        if (!submission) {
+        if (!submission || submission.status === 'CANCELLED') {
             return res.status(404).json({ message: 'Attempt not found' });
         }
 
@@ -272,6 +278,94 @@ router.post('/review-queue/:id/reassign', auth, canReview, async (req, res) => {
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot reassign review' });
+    }
+});
+
+router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
+    try {
+        const decision = String(req.body.decision || '').trim();
+        const feedback = String(req.body.feedback || '').trim();
+
+        if (decision !== 'PASS' && decision !== 'REVISION_REQUIRED') {
+            return res.status(400).json({ message: 'Decision must be PASS or REVISION_REQUIRED' });
+        }
+
+        if (!feedback) {
+            return res.status(400).json({ feedback: 'This field is required' });
+        }
+
+        const current = await Submission.findById(req.params.id);
+
+        if (!current) {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        if (!current.reviewer || String(current.reviewer) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Only the assigned reviewer can submit a decision' });
+        }
+
+        if (current.status !== 'UNDER_REVIEW' || current.decision) {
+            return res.status(400).json({ message: 'This review decision cannot be changed' });
+        }
+
+        let nextStatus = 'REVISION_REQUIRED';
+        let progressStatus = 'IN_PROGRESS';
+
+        if (decision === 'PASS') {
+            nextStatus = 'ACCEPTED';
+            progressStatus = 'COMPLETED';
+        } else if (current.attemptNumber >= 10) {
+            nextStatus = 'FINAL_FAILED';
+            progressStatus = 'FINAL_FAILED';
+        }
+
+        const submission = await Submission.findOneAndUpdate(
+            {
+                _id: current._id,
+                status: 'UNDER_REVIEW',
+                reviewer: req.user.userId,
+                decision: { $exists: false },
+            },
+            {
+                $set: {
+                    decision,
+                    feedback,
+                    reviewedAt: new Date(),
+                    status: nextStatus,
+                },
+            },
+            { new: true }
+        )
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username email')
+            .populate('reviewer', 'username role');
+
+        if (!submission) {
+            return res.status(400).json({ message: 'This review decision cannot be changed' });
+        }
+
+        await Progress.findOneAndUpdate(
+            { learner: submission.learner._id, challenge: submission.challenge._id },
+            { status: progressStatus },
+            { upsert: true, new: true }
+        );
+
+        try {
+            await sendReviewEmail({
+                to: submission.learner.email,
+                challengeTitle: submission.challenge.title || submission.challenge.challengeNumber,
+                attemptNumber: submission.attemptNumber,
+                decision,
+                feedback,
+            });
+        } catch (mailError) {
+            console.error(mailError.message);
+        }
+
+        return res.json(submission);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot submit review decision' });
     }
 });
 

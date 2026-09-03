@@ -31,6 +31,18 @@ function statusLabel(status) {
     return 'Under Review'
   }
 
+  if (status === 'ACCEPTED') {
+    return 'Accepted'
+  }
+
+  if (status === 'REVISION_REQUIRED') {
+    return 'Revision Required'
+  }
+
+  if (status === 'FINAL_FAILED') {
+    return 'Final Failed'
+  }
+
   return 'Pending'
 }
 
@@ -100,6 +112,12 @@ function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
           <p>Commit Link: {attempt.commitUrl}</p>
           <p>Explanation: {attempt.explanation}</p>
           <p>Test Evidence: {attempt.testEvidence}</p>
+          {attempt.decision ? (
+            <div>
+              <p>Decision: {attempt.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</p>
+              <p>Feedback: {attempt.feedback}</p>
+            </div>
+          ) : null}
           {attempt.status === 'UNDER_REVIEW' ? (
             <p>This attempt is under review. You cannot submit or cancel it.</p>
           ) : null}

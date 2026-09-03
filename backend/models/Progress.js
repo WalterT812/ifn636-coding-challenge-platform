@@ -14,7 +14,7 @@ const progressSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['NOT_STARTED', 'IN_PROGRESS'],
+            enum: ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'FINAL_FAILED'],
             default: 'NOT_STARTED',
         },
     },

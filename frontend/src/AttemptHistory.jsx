@@ -31,6 +31,18 @@ function statusLabel(status) {
     return 'Under Review'
   }
 
+  if (status === 'ACCEPTED') {
+    return 'Accepted'
+  }
+
+  if (status === 'REVISION_REQUIRED') {
+    return 'Revision Required'
+  }
+
+  if (status === 'FINAL_FAILED') {
+    return 'Final Failed'
+  }
+
   return 'Pending'
 }
 
