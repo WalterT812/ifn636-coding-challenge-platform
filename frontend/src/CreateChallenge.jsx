@@ -1,4 +1,46 @@
+import { useState } from 'react'
+
+const emptyForm = {
+  title: '',
+  type: '',
+  tier: '',
+  keywords: '',
+  description: '',
+  testExample: '',
+  expectedResult: '',
+}
+
+const requiredFields = [
+  'title',
+  'type',
+  'tier',
+  'keywords',
+  'description',
+  'testExample',
+  'expectedResult',
+]
+
 function CreateChallenge({ onLogout, onBack }) {
+  const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+
+  const updateField = (name, value) => {
+    setForm({ ...form, [name]: value })
+  }
+
+  // only publish needs every box filled
+  const handlePublish = () => {
+    const nextErrors = {}
+
+    requiredFields.forEach((name) => {
+      if (!String(form[name]).trim()) {
+        nextErrors[name] = true
+      }
+    })
+
+    setErrors(nextErrors)
+  }
+
   return (
     <div>
       <div className="nav">
@@ -19,22 +61,85 @@ function CreateChallenge({ onLogout, onBack }) {
 
       <div className="form-panels">
         <div className="form-panel">
-          <input type="text" placeholder="Title *" />
-          <select defaultValue="">
-            <option value="">Challenge Type *</option>
-            <option value="Debugging">Debugging</option>
-            <option value="Feature">Feature</option>
-            <option value="Refactoring">Refactoring</option>
-            <option value="Security">Security</option>
-          </select>
-          <input type="text" placeholder="Difficulty Tier *" />
-          <input type="text" placeholder="Keywords *" />
-          <textarea className="box-tall" placeholder="Description *" />
+          <div className="field">
+            <input
+              type="text"
+              placeholder="Title *"
+              value={form.title}
+              onChange={(event) => updateField('title', event.target.value)}
+              className={errors.title ? 'input-error' : ''}
+            />
+            {errors.title && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            <select
+              value={form.type}
+              onChange={(event) => updateField('type', event.target.value)}
+              className={errors.type ? 'input-error' : ''}
+            >
+              <option value="">Challenge Type *</option>
+              <option value="Debugging">Debugging</option>
+              <option value="Feature">Feature</option>
+              <option value="Refactoring">Refactoring</option>
+              <option value="Security">Security</option>
+            </select>
+            {errors.type && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            <input
+              type="text"
+              placeholder="Difficulty Tier *"
+              value={form.tier}
+              onChange={(event) => updateField('tier', event.target.value)}
+              className={errors.tier ? 'input-error' : ''}
+            />
+            {errors.tier && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            <input
+              type="text"
+              placeholder="Keywords *"
+              value={form.keywords}
+              onChange={(event) => updateField('keywords', event.target.value)}
+              className={errors.keywords ? 'input-error' : ''}
+            />
+            {errors.keywords && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            <textarea
+              className={errors.description ? 'box-tall input-error' : 'box-tall'}
+              placeholder="Description *"
+              value={form.description}
+              onChange={(event) => updateField('description', event.target.value)}
+            />
+            {errors.description && <p className="field-error">This field is required</p>}
+          </div>
         </div>
 
         <div className="form-panel">
-          <textarea className="box-medium" placeholder="Test Example *" />
-          <textarea className="box-medium" placeholder="Expected Result Example *" />
+          <div className="field">
+            <textarea
+              className={errors.testExample ? 'box-medium input-error' : 'box-medium'}
+              placeholder="Test Example *"
+              value={form.testExample}
+              onChange={(event) => updateField('testExample', event.target.value)}
+            />
+            {errors.testExample && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            <textarea
+              className={errors.expectedResult ? 'box-medium input-error' : 'box-medium'}
+              placeholder="Expected Result Example *"
+              value={form.expectedResult}
+              onChange={(event) => updateField('expectedResult', event.target.value)}
+            />
+            {errors.expectedResult && <p className="field-error">This field is required</p>}
+          </div>
         </div>
       </div>
 
@@ -42,7 +147,7 @@ function CreateChallenge({ onLogout, onBack }) {
         <button type="button" className="btn-secondary">
           Save Draft
         </button>
-        <button type="button" className="btn-primary">
+        <button type="button" className="btn-primary" onClick={handlePublish}>
           Publish Challenge
         </button>
         <button type="button" className="btn-cancel" onClick={onBack}>
