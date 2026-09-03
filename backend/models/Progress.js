@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// one progress row per learner + challenge
 const progressSchema = new mongoose.Schema(
     {
         learner: {
@@ -23,6 +24,6 @@ const progressSchema = new mongoose.Schema(
     }
 );
 
-progressSchema.index({ learner: 1, challenge: 1 }, { unique: true });
+progressSchema.index({ learner: 1, challenge: 1 }, { unique: true }); // do not make two rows for the same pair
 
 module.exports = mongoose.model('Progress', progressSchema);

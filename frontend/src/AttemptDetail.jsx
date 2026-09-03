@@ -47,6 +47,7 @@ function statusLabel(status) {
 }
 
 function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
+  // this page is read only, a submitted attempt cannot be edited
   const [attempt, setAttempt] = useState(null)
   const [message, setMessage] = useState('')
 
@@ -114,6 +115,7 @@ function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
           <p>Test Evidence: {attempt.testEvidence}</p>
           {attempt.decision ? (
             <div>
+              {/* extra admin comments sit under the first feedback */}
               <p>Review Time: {formatTime(attempt.reviewedAt)}</p>
               <p>Decision: {attempt.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</p>
               <p>Feedback: {attempt.feedback}</p>

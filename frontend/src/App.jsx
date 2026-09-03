@@ -176,6 +176,7 @@ function App() {
 
     const canManageChallenges = can(role, 'challengeManagement')
     const canReviewQueue = can(role, 'reviewQueue')
+    // /admin/review-queue or /admin/review-queue/:id
     const reviewAttemptId = path.startsWith('/admin/review-queue/')
       ? path.slice('/admin/review-queue/'.length)
       : ''

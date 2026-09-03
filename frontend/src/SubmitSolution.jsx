@@ -10,6 +10,7 @@ function isHttpUrl(value) {
 }
 
 function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }) {
+  // lock the form while an attempt is under review, passed, or final failed
   const [form, setForm] = useState({
     repoUrl: '',
     commitUrl: '',

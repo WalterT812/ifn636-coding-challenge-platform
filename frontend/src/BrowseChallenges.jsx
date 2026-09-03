@@ -13,6 +13,7 @@ function formatDate(value) {
 }
 
 function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
+  // published cards only, newest at the front
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
 

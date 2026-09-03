@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// one row = one learner attempt for a challenge
 const submissionSchema = new mongoose.Schema(
     {
         challenge: {
@@ -34,7 +35,7 @@ const submissionSchema = new mongoose.Schema(
             type: Number,
             required: true,
             min: 1,
-            max: 10,
+            max: 10, // learner can try up to 10 times
         },
         submittedAt: {
             type: Date,
@@ -66,14 +67,15 @@ const submissionSchema = new mongoose.Schema(
         },
         decision: {
             type: String,
-            enum: ['PASS', 'REVISION_REQUIRED'],
+            enum: ['PASS', 'REVISION_REQUIRED'], // first review result, do not edit later
         },
         feedback: {
-            type: String,
+            type: String, // first review text, do not edit later
         },
         reviewedAt: {
             type: Date,
         },
+        // extra notes after the review, shown under feedback
         comments: [
             {
                 text: {

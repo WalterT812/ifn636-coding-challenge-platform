@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+// learner review list: only their own results from the API
+
 function formatTime(value) {
   if (!value) {
     return '-'
@@ -94,7 +96,14 @@ function ReviewHistory({ onOpenAttempt, onUnauthorized }) {
                 </td>
                 <td>{formatTime(item.reviewedAt)}</td>
                 <td>{decisionLabel(item.decision)}</td>
-                <td>{item.feedback || '-'}</td>
+                <td>
+                  <p>{item.feedback || '-'}</p>
+                  {(item.comments || []).map((comment) => (
+                    <p key={comment._id}>
+                      Admin comment ({comment.createdBy?.username || 'Admin'}): {comment.text}
+                    </p>
+                  ))}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -1,3 +1,4 @@
+// learner submit + admin review APIs
 const express = require('express');
 const Challenge = require('../models/Challenge');
 const Submission = require('../models/Submission');
@@ -12,12 +13,14 @@ const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
 const canReview = requireRole(...permissions.reviewQueue);
 
+// queue only wants the latest attempt that is still waiting
 const waitingForReview = {
     selectedForReview: true,
     status: { $nin: ['CANCELLED', 'PASSED', 'FAILED', 'ACCEPTED', 'REVISION_REQUIRED', 'FINAL_FAILED'] },
 };
 
 function isHttpUrl(value) {
+    // repo and commit must be a real http/https link
     try {
         const url = new URL(String(value || '').trim());
         return url.protocol === 'http:' || url.protocol === 'https:';
@@ -26,6 +29,7 @@ function isHttpUrl(value) {
     }
 }
 
+// learner creates a new attempt
 router.post('/', auth, canSubmit, async (req, res) => {
     try {
         const repoUrl = String(req.body.repoUrl || '').trim();
@@ -91,6 +95,7 @@ router.post('/', auth, canSubmit, async (req, res) => {
             return res.status(400).json({ message: 'You already have an attempt under review' });
         }
 
+        // only the newest attempt is selected for review
         await Submission.updateMany(
             { learner: req.user.userId, challenge: challenge._id },
             { $set: { selectedForReview: false } }
@@ -138,6 +143,7 @@ router.get('/review-queue', auth, canReview, async (req, res) => {
     }
 });
 
+// one attempt for the admin, including after they already reviewed it
 router.get('/review-queue/:id', auth, canReview, async (req, res) => {
     try {
         const submission = await Submission.findById(req.params.id)
@@ -156,6 +162,7 @@ router.get('/review-queue/:id', auth, canReview, async (req, res) => {
     }
 });
 
+// admin manager uses this list to reassign a locked review
 router.get('/reviewers', auth, canReview, async (req, res) => {
     try {
         const reviewers = await User.find({
@@ -208,6 +215,7 @@ router.post('/review-queue/:id/claim', auth, canReview, async (req, res) => {
     }
 });
 
+// reviewer can let go before they submit a decision
 router.post('/review-queue/:id/release', auth, canReview, async (req, res) => {
     try {
         const submission = await Submission.findOneAndUpdate(
@@ -240,6 +248,7 @@ router.post('/review-queue/:id/release', auth, canReview, async (req, res) => {
 });
 
 router.post('/review-queue/:id/reassign', auth, canReview, async (req, res) => {
+    // only admin manager can move a locked review to someone else
     try {
         if (req.user.role !== 'ADMIN_MANAGER') {
             return res.status(403).json({ message: 'Only an Admin Manager can reassign a review' });
@@ -282,6 +291,7 @@ router.post('/review-queue/:id/reassign', auth, canReview, async (req, res) => {
     }
 });
 
+// first decision cannot be edited after this
 router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
     try {
         const decision = String(req.body.decision || '').trim();
@@ -316,6 +326,7 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
             nextStatus = 'ACCEPTED';
             progressStatus = 'COMPLETED';
         } else if (current.attemptNumber >= 10) {
+            // last try and not a pass
             nextStatus = 'FINAL_FAILED';
             progressStatus = 'FINAL_FAILED';
         }
@@ -351,6 +362,7 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
             { upsert: true, new: true }
         );
 
+        // email fail should not block the saved review
         try {
             await sendReviewEmail({
                 to: submission.learner.email,
@@ -370,6 +382,7 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
     }
 });
 
+// extra comment only, do not change decision or feedback
 router.post('/review-queue/:id/comments', auth, canReview, async (req, res) => {
     try {
         const text = String(req.body.text || '').trim();
@@ -408,6 +421,7 @@ router.post('/review-queue/:id/comments', auth, canReview, async (req, res) => {
     }
 });
 
+// already reviewed, so admin can open them again and add a comment
 router.get('/reviewed', auth, canReview, async (req, res) => {
     try {
         const submissions = await Submission.find({
@@ -465,6 +479,7 @@ router.get('/', auth, canSubmit, async (req, res) => {
     }
 });
 
+// 404 if this is not their attempt, so they cannot peek at others
 router.get('/:id', auth, canSubmit, async (req, res) => {
     try {
         const submission = await Submission.findOne({
@@ -485,6 +500,7 @@ router.get('/:id', auth, canSubmit, async (req, res) => {
 });
 
 router.patch('/:id/cancel', auth, canSubmit, async (req, res) => {
+    // keep the row, just mark cancelled; block this while under review
     try {
         const submission = await Submission.findOne({
             _id: req.params.id,

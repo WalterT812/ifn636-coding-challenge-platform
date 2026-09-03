@@ -38,6 +38,7 @@ function getSaved(name) {
   return localStorage.getItem(name) || sessionStorage.getItem(name) || ''
 }
 
+// Super Admin cannot open this page, App already checks the role
 function ReviewQueue({
   attemptId,
   onLogout,
@@ -188,6 +189,7 @@ function ReviewQueue({
     }
   }, [attemptId])
 
+  // claim, release, reassign, or submit the first decision
   const sendAction = async (path, body) => {
     const token = getSaved('token')
     setMessage('')

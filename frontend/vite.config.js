@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
+    // local only: frontend calls /api, Vite forwards to Express
     proxy: {
       '/api': 'http://localhost:5001',
     },

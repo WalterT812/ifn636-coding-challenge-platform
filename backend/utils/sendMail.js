@@ -1,3 +1,5 @@
+// send the review result to the learner
+// if SMTP is not set, just print it so we can still demo locally
 async function sendReviewEmail({ to, challengeTitle, attemptNumber, decision, feedback }) {
     const subject = 'Review result: ' + (challengeTitle || 'your challenge');
     const resultText = decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED';

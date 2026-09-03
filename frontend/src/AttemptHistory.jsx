@@ -47,6 +47,7 @@ function statusLabel(status) {
 }
 
 function AttemptHistory({ challengeId, showChallenge, refreshKey, onOpenAttempt, onUnauthorized }) {
+  // cancelled attempts stay here, they are not deleted
   const [attempts, setAttempts] = useState([])
   const [message, setMessage] = useState('')
 

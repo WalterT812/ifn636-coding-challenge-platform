@@ -15,6 +15,7 @@ function formatDate(value) {
 }
 
 function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound, onOpenAttempt }) {
+  // opening a challenge does not change progress, only submit does
   const [challenge, setChallenge] = useState(null)
   const [message, setMessage] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
@@ -100,7 +101,7 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound, onOp
           challengeId={challenge._id}
           refreshKey={refreshKey}
           onUnauthorized={onUnauthorized}
-          onSubmitted={() => setRefreshKey(refreshKey + 1)}
+          onSubmitted={() => setRefreshKey(refreshKey + 1)} // reload my attempts after a new submit
         />
       )}
     </div>

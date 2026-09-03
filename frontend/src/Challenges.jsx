@@ -7,12 +7,15 @@ import ReviewHistory from './ReviewHistory.jsx'
 import NotFound from './NotFound.jsx'
 
 function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
+  // learner pages share this top menu
   const titles = {
     progress: 'Progress',
     browsing: 'Browsing History',
   }
   const [challengeMissing, setChallengeMissing] = useState(false)
   const [attemptMissing, setAttemptMissing] = useState(false)
+  const [attemptBack, setAttemptBack] = useState('history')
+  const [backChallengeId, setBackChallengeId] = useState('')
 
   useEffect(() => {
     setChallengeMissing(false)
@@ -62,7 +65,11 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
           onUnauthorized={onUnauthorized}
           onNotFound={() => setChallengeMissing(true)}
           onBack={() => onOpenPage('challenges')}
-          onOpenAttempt={(id) => onOpenPage('attempt', id)}
+          onOpenAttempt={(id) => {
+            setAttemptBack('detail')
+            setBackChallengeId(challengeId)
+            onOpenPage('attempt', id)
+          }}
         />
       ) : null}
 
@@ -70,7 +77,10 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
         <AttemptHistory
           showChallenge
           onUnauthorized={onUnauthorized}
-          onOpenAttempt={(id) => onOpenPage('attempt', id)}
+          onOpenAttempt={(id) => {
+            setAttemptBack('history')
+            onOpenPage('attempt', id)
+          }}
         />
       ) : null}
 
@@ -81,7 +91,10 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
       {page === 'reviews' ? (
         <ReviewHistory
           onUnauthorized={onUnauthorized}
-          onOpenAttempt={(id) => onOpenPage('attempt', id)}
+          onOpenAttempt={(id) => {
+            setAttemptBack('reviews')
+            onOpenPage('attempt', id)
+          }}
         />
       ) : null}
 
@@ -90,7 +103,14 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
           attemptId={attemptId}
           onUnauthorized={onUnauthorized}
           onNotFound={() => setAttemptMissing(true)}
-          onBack={() => onOpenPage('history')}
+          onBack={() => {
+            if (attemptBack === 'detail' && backChallengeId) {
+              onOpenPage('detail', backChallengeId)
+              return
+            }
+
+            onOpenPage(attemptBack)
+          }}
         />
       ) : null}
 
