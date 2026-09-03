@@ -273,6 +273,11 @@ function CreateChallenge({ onLogout, onBack }) {
           </div>
 
           <div className="field">
+            {/* this unit only uses Python 3, admin cannot change it */}
+            <input type="text" value="Environment: Python 3" disabled />
+          </div>
+
+          <div className="field">
             {/* taken from the person who logged in */}
             <input
               type="text"

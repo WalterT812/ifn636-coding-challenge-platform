@@ -37,7 +37,7 @@ const challengeSchema = new mongoose.Schema(
         },
         environment: {
             type: String,
-            default: 'Python 3', // fixed for this unit
+            default: 'Python 3', // this unit only runs Python 3
         },
         status: {
             type: String,
