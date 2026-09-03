@@ -9,6 +9,7 @@ const emptyForm = {
   testExample: '',
   expectedResult: '',
   starterRepo: '',
+  reviewCriteria: '',
 }
 
 const requiredFields = [
@@ -19,6 +20,7 @@ const requiredFields = [
   'testExample',
   'expectedResult',
   'starterRepo',
+  'reviewCriteria',
 ]
 
 function CreateChallenge({ onLogout, onBack }) {
@@ -257,6 +259,17 @@ function CreateChallenge({ onLogout, onBack }) {
               className={errors.starterRepo ? 'input-error' : ''}
             />
             {errors.starterRepo && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            {/* how a reviewer should mark the learner's code */}
+            <textarea
+              className={errors.reviewCriteria ? 'box-medium input-error' : 'box-medium'}
+              placeholder="Review Criteria *"
+              value={form.reviewCriteria}
+              onChange={(event) => updateField('reviewCriteria', event.target.value)}
+            />
+            {errors.reviewCriteria && <p className="field-error">This field is required</p>}
           </div>
 
           <div className="field">

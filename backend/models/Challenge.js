@@ -33,7 +33,7 @@ const challengeSchema = new mongoose.Schema(
             trim: true, // github link the learner starts from
         },
         reviewCriteria: {
-            type: String,
+            type: String, // how the admin marks the solution
         },
         environment: {
             type: String,
