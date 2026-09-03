@@ -2,6 +2,7 @@ const express = require('express');
 const Challenge = require('../models/Challenge');
 const Submission = require('../models/Submission');
 const Progress = require('../models/Progress');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
@@ -118,6 +119,7 @@ router.get('/review-queue', auth, canReview, async (req, res) => {
         const submissions = await Submission.find(waitingForReview)
             .populate('challenge', 'challengeNumber title')
             .populate('learner', 'username')
+            .populate('reviewer', 'username role')
             .sort({ submittedAt: -1 });
 
         return res.json(submissions);
@@ -134,7 +136,8 @@ router.get('/review-queue/:id', auth, canReview, async (req, res) => {
             ...waitingForReview,
         })
             .populate('challenge', 'challengeNumber title')
-            .populate('learner', 'username');
+            .populate('learner', 'username')
+            .populate('reviewer', 'username role');
 
         if (!submission) {
             return res.status(404).json({ message: 'Attempt not found' });
@@ -143,6 +146,132 @@ router.get('/review-queue/:id', auth, canReview, async (req, res) => {
         return res.json(submission);
     } catch (error) {
         return res.status(404).json({ message: 'Attempt not found' });
+    }
+});
+
+router.get('/reviewers', auth, canReview, async (req, res) => {
+    try {
+        const reviewers = await User.find({
+            role: { $in: ['ADMIN', 'ADMIN_MANAGER'] },
+            active: true,
+        }).select('username role');
+
+        return res.json(reviewers);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load reviewers' });
+    }
+});
+
+// only one admin can claim an attempt
+router.post('/review-queue/:id/claim', auth, canReview, async (req, res) => {
+    try {
+        const submission = await Submission.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                selectedForReview: true,
+                status: 'SUBMITTED',
+            },
+            {
+                $set: {
+                    status: 'UNDER_REVIEW',
+                    reviewer: req.user.userId,
+                },
+            },
+            { new: true }
+        )
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username')
+            .populate('reviewer', 'username role');
+
+        if (submission) {
+            return res.json(submission);
+        }
+
+        const existing = await Submission.findById(req.params.id);
+
+        if (!existing || existing.status === 'CANCELLED') {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        return res.status(409).json({ message: 'This attempt is already under review' });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot start review' });
+    }
+});
+
+router.post('/review-queue/:id/release', auth, canReview, async (req, res) => {
+    try {
+        const submission = await Submission.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                status: 'UNDER_REVIEW',
+                reviewer: req.user.userId,
+            },
+            {
+                $set: {
+                    status: 'SUBMITTED',
+                    reviewer: null,
+                },
+            },
+            { new: true }
+        )
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username')
+            .populate('reviewer', 'username role');
+
+        if (!submission) {
+            return res.status(403).json({ message: 'You cannot release this attempt' });
+        }
+
+        return res.json(submission);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot release review' });
+    }
+});
+
+router.post('/review-queue/:id/reassign', auth, canReview, async (req, res) => {
+    try {
+        if (req.user.role !== 'ADMIN_MANAGER') {
+            return res.status(403).json({ message: 'Only an Admin Manager can reassign a review' });
+        }
+
+        const nextReviewer = await User.findOne({
+            _id: req.body.reviewerId,
+            role: { $in: ['ADMIN', 'ADMIN_MANAGER'] },
+            active: true,
+        });
+
+        if (!nextReviewer) {
+            return res.status(400).json({ message: 'Please choose a valid reviewer' });
+        }
+
+        const submission = await Submission.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                status: 'UNDER_REVIEW',
+            },
+            {
+                $set: {
+                    reviewer: nextReviewer._id,
+                },
+            },
+            { new: true }
+        )
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username')
+            .populate('reviewer', 'username role');
+
+        if (!submission) {
+            return res.status(400).json({ message: 'This attempt is not locked for review' });
+        }
+
+        return res.json(submission);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot reassign review' });
     }
 });
 
@@ -180,6 +309,34 @@ router.get('/:id', auth, canSubmit, async (req, res) => {
         return res.json(submission);
     } catch (error) {
         return res.status(404).json({ message: 'Attempt not found' });
+    }
+});
+
+router.patch('/:id/cancel', auth, canSubmit, async (req, res) => {
+    try {
+        const submission = await Submission.findOne({
+            _id: req.params.id,
+            learner: req.user.userId,
+        });
+
+        if (!submission) {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        if (submission.status === 'UNDER_REVIEW') {
+            return res.status(400).json({ message: 'This attempt is under review and cannot be cancelled' });
+        }
+
+        if (submission.status !== 'SUBMITTED') {
+            return res.status(400).json({ message: 'This attempt cannot be cancelled' });
+        }
+
+        submission.status = 'CANCELLED';
+        await submission.save();
+        return res.json(submission);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot cancel attempt' });
     }
 });
 

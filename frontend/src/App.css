@@ -308,6 +308,11 @@ input:disabled {
   color: white;
 }
 
+.btn-primary:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   background: white;
   border: 1px solid #d1d5db;

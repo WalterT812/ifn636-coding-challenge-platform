@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function isHttpUrl(value) {
   try {
@@ -9,7 +9,7 @@ function isHttpUrl(value) {
   }
 }
 
-function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
+function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }) {
   const [form, setForm] = useState({
     repoUrl: '',
     commitUrl: '',
@@ -18,6 +18,39 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
   })
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState('')
+  const [locked, setLocked] = useState(false)
+
+  useEffect(() => {
+    const loadLock = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+
+      try {
+        const response = await fetch(
+          'http://localhost:5001/api/submissions?challengeId=' + challengeId,
+          {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          }
+        )
+
+        const data = await response.json()
+
+        if (response.status === 401) {
+          onUnauthorized()
+          return
+        }
+
+        if (response.ok) {
+          setLocked(data.some((item) => item.status === 'UNDER_REVIEW'))
+        }
+      } catch (error) {
+        setLocked(false)
+      }
+    }
+
+    loadLock()
+  }, [challengeId, refreshKey])
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value })
@@ -27,6 +60,11 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
   const handleSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
+
+    if (locked) {
+      setMessage('This attempt is under review. You cannot submit or cancel it.')
+      return
+    }
 
     const nextErrors = {}
 
@@ -118,6 +156,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
           value={form.repoUrl}
           onChange={(event) => updateField('repoUrl', event.target.value)}
           className={errors.repoUrl ? 'input-error' : ''}
+          disabled={locked}
         />
         {errors.repoUrl && <p className="field-error">{errors.repoUrl}</p>}
       </div>
@@ -129,6 +168,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
           value={form.commitUrl}
           onChange={(event) => updateField('commitUrl', event.target.value)}
           className={errors.commitUrl ? 'input-error' : ''}
+          disabled={locked}
         />
         {errors.commitUrl && <p className="field-error">{errors.commitUrl}</p>}
       </div>
@@ -139,6 +179,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
           className={errors.explanation ? 'box-medium input-error' : 'box-medium'}
           value={form.explanation}
           onChange={(event) => updateField('explanation', event.target.value)}
+          disabled={locked}
         />
         {errors.explanation && <p className="field-error">{errors.explanation}</p>}
       </div>
@@ -149,13 +190,18 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted }) {
           className={errors.testEvidence ? 'box-medium input-error' : 'box-medium'}
           value={form.testEvidence}
           onChange={(event) => updateField('testEvidence', event.target.value)}
+          disabled={locked}
         />
         {errors.testEvidence && <p className="field-error">{errors.testEvidence}</p>}
       </div>
 
-      <button type="submit" className="btn-primary">
+      <button type="submit" className="btn-primary" disabled={locked}>
         Submit Attempt
       </button>
+
+      {locked && (
+        <p className="form-message">This attempt is under review. You cannot submit or cancel it.</p>
+      )}
 
       {message && <p className="form-message">{message}</p>}
     </form>

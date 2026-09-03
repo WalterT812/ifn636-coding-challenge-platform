@@ -27,6 +27,10 @@ function statusLabel(status) {
     return 'Cancelled'
   }
 
+  if (status === 'UNDER_REVIEW') {
+    return 'Under Review'
+  }
+
   return 'Pending'
 }
 
@@ -96,6 +100,9 @@ function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
           <p>Commit Link: {attempt.commitUrl}</p>
           <p>Explanation: {attempt.explanation}</p>
           <p>Test Evidence: {attempt.testEvidence}</p>
+          {attempt.status === 'UNDER_REVIEW' ? (
+            <p>This attempt is under review. You cannot submit or cancel it.</p>
+          ) : null}
         </div>
       )}
     </div>

@@ -22,6 +22,10 @@ function statusLabel(status) {
   return 'Pending'
 }
 
+function getSaved(name) {
+  return localStorage.getItem(name) || sessionStorage.getItem(name) || ''
+}
+
 function ReviewQueue({
   attemptId,
   onLogout,
@@ -35,10 +39,63 @@ function ReviewQueue({
 }) {
   const [attempts, setAttempts] = useState([])
   const [attempt, setAttempt] = useState(null)
+  const [reviewers, setReviewers] = useState([])
+  const [nextReviewerId, setNextReviewerId] = useState('')
   const [message, setMessage] = useState('')
+  const username = getSaved('username')
+  const role = getSaved('role')
+
+  const handleAuth = (response) => {
+    if (response.status === 403) {
+      onForbidden()
+      return true
+    }
+
+    if (response.status === 401) {
+      onUnauthorized()
+      return true
+    }
+
+    return false
+  }
+
+  const loadAttempt = async () => {
+    const token = getSaved('token')
+
+    try {
+      const response = await fetch(
+        'http://localhost:5001/api/submissions/review-queue/' + attemptId,
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (handleAuth(response)) {
+        return
+      }
+
+      if (response.status === 404) {
+        onNotFound()
+        return
+      }
+
+      if (!response.ok) {
+        setMessage(data.message || 'Cannot load attempt')
+        return
+      }
+
+      setAttempt(data)
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
 
   useEffect(() => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    const token = getSaved('token')
 
     const loadQueue = async () => {
       try {
@@ -50,13 +107,7 @@ function ReviewQueue({
 
         const data = await response.json()
 
-        if (response.status === 403) {
-          onForbidden()
-          return
-        }
-
-        if (response.status === 401) {
-          onUnauthorized()
+        if (handleAuth(response)) {
           return
         }
 
@@ -71,52 +122,68 @@ function ReviewQueue({
       }
     }
 
-    const loadAttempt = async () => {
+    const loadReviewers = async () => {
       try {
-        const response = await fetch(
-          'http://localhost:5001/api/submissions/review-queue/' + attemptId,
-          {
-            headers: {
-              Authorization: 'Bearer ' + token,
-            },
-          }
-        )
+        const response = await fetch('http://localhost:5001/api/submissions/reviewers', {
+          headers: {
+            Authorization: 'Bearer ' + token,
+          },
+        })
 
         const data = await response.json()
 
-        if (response.status === 403) {
-          onForbidden()
-          return
+        if (response.ok) {
+          setReviewers(data)
         }
-
-        if (response.status === 401) {
-          onUnauthorized()
-          return
-        }
-
-        if (response.status === 404) {
-          onNotFound()
-          return
-        }
-
-        if (!response.ok) {
-          setMessage(data.message || 'Cannot load attempt')
-          return
-        }
-
-        setAttempt(data)
       } catch (error) {
-        setMessage('Cannot connect to server')
+        setReviewers([])
       }
     }
 
+    setMessage('')
+
     if (attemptId) {
       loadAttempt()
+      loadReviewers()
     } else {
       setAttempt(null)
       loadQueue()
     }
   }, [attemptId])
+
+  const sendAction = async (path, body) => {
+    const token = getSaved('token')
+    setMessage('')
+
+    try {
+      const response = await fetch('http://localhost:5001/api/submissions/' + path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify(body || {}),
+      })
+
+      const data = await response.json()
+
+      if (handleAuth(response)) {
+        return
+      }
+
+      if (!response.ok) {
+        setMessage(data.message || 'Cannot update review')
+        return
+      }
+
+      setAttempt(data)
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
+  const isReviewer = attempt && attempt.reviewer && attempt.reviewer.username === username
+  const canReassign = role === 'ADMIN_MANAGER' && attempt && attempt.status === 'UNDER_REVIEW'
 
   return (
     <div>
@@ -154,11 +221,73 @@ function ReviewQueue({
             <p>Attempt: {attempt.attemptNumber}</p>
             <p>Submitted Time: {formatTime(attempt.submittedAt)}</p>
             <p>Status: {statusLabel(attempt.status)}</p>
+            <p>Reviewer: {attempt.reviewer?.username || '-'}</p>
             <p>Repository Link: {attempt.repoUrl}</p>
             <p>Commit Link: {attempt.commitUrl}</p>
             <p>Explanation: {attempt.explanation}</p>
             <p>Test Evidence: {attempt.testEvidence}</p>
           </div>
+
+          {attempt.status === 'SUBMITTED' ? (
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => sendAction('review-queue/' + attempt._id + '/claim')}
+              >
+                Start Review
+              </button>
+            </div>
+          ) : null}
+
+          {attempt.status === 'UNDER_REVIEW' && isReviewer ? (
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => sendAction('review-queue/' + attempt._id + '/release')}
+              >
+                Release Review
+              </button>
+            </div>
+          ) : null}
+
+          {attempt.status === 'UNDER_REVIEW' && !isReviewer ? (
+            <p className="list-empty">
+              Locked by {attempt.reviewer?.username || 'another admin'}
+            </p>
+          ) : null}
+
+          {canReassign ? (
+            <div className="submit-box">
+              <h2>Reassign Review</h2>
+              <div className="field">
+                <label>Reviewer:</label>
+                <select
+                  value={nextReviewerId}
+                  onChange={(event) => setNextReviewerId(event.target.value)}
+                >
+                  <option value="">Select reviewer</option>
+                  {reviewers.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() =>
+                  sendAction('review-queue/' + attempt._id + '/reassign', {
+                    reviewerId: nextReviewerId,
+                  })
+                }
+              >
+                Reassign
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -176,6 +305,7 @@ function ReviewQueue({
               <th>Attempt</th>
               <th>Submitted Time</th>
               <th>Status</th>
+              <th>Reviewer</th>
             </tr>
           </thead>
           <tbody>
@@ -192,6 +322,7 @@ function ReviewQueue({
                 </td>
                 <td>{formatTime(item.submittedAt)}</td>
                 <td>{statusLabel(item.status)}</td>
+                <td>{item.reviewer?.username || '-'}</td>
               </tr>
             ))}
           </tbody>

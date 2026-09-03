@@ -50,6 +50,11 @@ const submissionSchema = new mongoose.Schema(
             type: Boolean,
             default: false, // latest attempt is set true
         },
+        reviewer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User', // admin who claimed this attempt
+            default: null,
+        },
     },
     {
         timestamps: true,

@@ -27,6 +27,10 @@ function statusLabel(status) {
     return 'Cancelled'
   }
 
+  if (status === 'UNDER_REVIEW') {
+    return 'Under Review'
+  }
+
   return 'Pending'
 }
 

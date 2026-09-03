@@ -98,6 +98,7 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound, onOp
       {challenge && (
         <SubmitSolution
           challengeId={challenge._id}
+          refreshKey={refreshKey}
           onUnauthorized={onUnauthorized}
           onSubmitted={() => setRefreshKey(refreshKey + 1)}
         />
