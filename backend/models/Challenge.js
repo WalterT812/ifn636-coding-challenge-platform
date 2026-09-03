@@ -19,9 +19,8 @@ const challengeSchema = new mongoose.Schema(
             required: true,
         },
         keywords: {
-            type: String,
-            required: true,
-            trim: true,
+            type: [String], // more than one, e.g. login, python
+            default: [],
         },
         description: {
             type: String,

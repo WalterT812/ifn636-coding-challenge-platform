@@ -4,7 +4,7 @@ const emptyForm = {
   title: '',
   type: '',
   tier: '',
-  keywords: '',
+  keywords: [],
   description: '',
   testExample: '',
   expectedResult: '',
@@ -14,7 +14,6 @@ const requiredFields = [
   'title',
   'type',
   'tier',
-  'keywords',
   'description',
   'testExample',
   'expectedResult',
@@ -23,9 +22,33 @@ const requiredFields = [
 function CreateChallenge({ onLogout, onBack }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
+  const [keywordText, setKeywordText] = useState('')
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value })
+  }
+
+  const addKeyword = () => {
+    const word = keywordText.trim()
+
+    if (!word) {
+      return
+    }
+
+    if (form.keywords.includes(word)) {
+      setKeywordText('')
+      return
+    }
+
+    setForm({ ...form, keywords: [...form.keywords, word] })
+    setKeywordText('')
+  }
+
+  const removeKeyword = (word) => {
+    setForm({
+      ...form,
+      keywords: form.keywords.filter((item) => item !== word),
+    })
   }
 
   // only publish needs every box filled
@@ -37,6 +60,10 @@ function CreateChallenge({ onLogout, onBack }) {
         nextErrors[name] = true
       }
     })
+
+    if (form.keywords.length === 0) {
+      nextErrors.keywords = true
+    }
 
     setErrors(nextErrors)
   }
@@ -104,13 +131,31 @@ function CreateChallenge({ onLogout, onBack }) {
           </div>
 
           <div className="field">
-            <input
-              type="text"
-              placeholder="Keywords *"
-              value={form.keywords}
-              onChange={(event) => updateField('keywords', event.target.value)}
-              className={errors.keywords ? 'input-error' : ''}
-            />
+            {/* type a word, click Add, repeat */}
+            <div className="keyword-row">
+              <input
+                type="text"
+                placeholder="Keywords *"
+                value={keywordText}
+                onChange={(event) => setKeywordText(event.target.value)}
+                className={errors.keywords ? 'input-error' : ''}
+              />
+              <button type="button" className="keyword-add" onClick={addKeyword}>
+                Add
+              </button>
+            </div>
+            <div className="keyword-list">
+              {form.keywords.map((word) => (
+                <button
+                  key={word}
+                  type="button"
+                  className="keyword-tag"
+                  onClick={() => removeKeyword(word)}
+                >
+                  {word} ×
+                </button>
+              ))}
+            </div>
             {errors.keywords && <p className="field-error">This field is required</p>}
           </div>
 

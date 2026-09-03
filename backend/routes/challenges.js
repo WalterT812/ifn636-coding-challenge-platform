@@ -21,7 +21,12 @@ router.post('/', auth, async (req, res) => {
             title: req.body.title,
             type: req.body.type,
             tier: req.body.tier,
-            keywords: req.body.keywords,
+            keywords: Array.isArray(req.body.keywords)
+                ? req.body.keywords
+                : String(req.body.keywords || '')
+                    .split(',')
+                    .map((word) => word.trim())
+                    .filter(Boolean),
             description: req.body.description,
             testExample: req.body.testExample,
             expectedResult: req.body.expectedResult,

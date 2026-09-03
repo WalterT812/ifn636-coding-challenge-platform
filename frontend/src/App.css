@@ -218,6 +218,38 @@ input:disabled {
   height: 44px;
 }
 
+.keyword-row {
+  display: flex;
+  gap: 8px;
+}
+
+.keyword-row input {
+  flex: 1;
+  width: auto;
+}
+
+.keyword-add {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.keyword-list {
+  margin-top: 8px;
+}
+
+.keyword-tag {
+  margin: 0 6px 6px 0;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
 .input-error {
   border: 1.5px solid #dc2626;
 }
