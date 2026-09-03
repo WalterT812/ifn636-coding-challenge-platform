@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import BrowseChallenges from './BrowseChallenges.jsx'
 import ChallengeDetail from './ChallengeDetail.jsx'
+import NotFound from './NotFound.jsx'
 
 function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId }) {
   const titles = {
@@ -7,6 +9,11 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId })
     history: 'History',
     browsing: 'Browsing History',
   }
+  const [challengeMissing, setChallengeMissing] = useState(false)
+
+  useEffect(() => {
+    setChallengeMissing(false)
+  }, [challengeId, page])
 
   return (
     <div>
@@ -38,10 +45,15 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId })
         />
       ) : null}
 
-      {page === 'detail' ? (
+      {page === 'detail' && challengeMissing ? (
+        <NotFound onHome={() => onOpenPage('challenges')} />
+      ) : null}
+
+      {page === 'detail' && !challengeMissing ? (
         <ChallengeDetail
           challengeId={challengeId}
           onUnauthorized={onUnauthorized}
+          onNotFound={() => setChallengeMissing(true)}
           onBack={() => onOpenPage('challenges')}
         />
       ) : null}

@@ -12,7 +12,7 @@ function formatDate(value) {
   })
 }
 
-function ChallengeDetail({ challengeId, onBack, onUnauthorized }) {
+function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound }) {
   const [challenge, setChallenge] = useState(null)
   const [message, setMessage] = useState('')
 
@@ -38,7 +38,7 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized }) {
         }
 
         if (response.status === 404) {
-          setChallenge(null)
+          onNotFound()
           return
         }
 
@@ -67,10 +67,6 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized }) {
       </p>
 
       {message && <p className="form-message">{message}</p>}
-
-      {!message && !challenge ? (
-        <p className="list-empty">Challenge not found</p>
-      ) : null}
 
       {challenge && (
         <div className="detail-box">
