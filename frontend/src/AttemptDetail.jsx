@@ -55,7 +55,7 @@ function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
       try {
-        const response = await fetch('http://localhost:5001/api/submissions/' + attemptId, {
+        const response = await fetch('/api/submissions/' + attemptId, {
           headers: {
             Authorization: 'Bearer ' + token,
           },

@@ -21,7 +21,7 @@ function ChallengeList({ onLogout, onOpenDashboard, onOpenReview, onCreate, onOp
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
       try {
-        const response = await fetch('http://localhost:5001/api/challenges', {
+        const response = await fetch('/api/challenges', {
           headers: {
             Authorization: 'Bearer ' + token,
           },

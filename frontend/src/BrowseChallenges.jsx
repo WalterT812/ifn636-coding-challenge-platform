@@ -21,7 +21,7 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
       try {
-        const response = await fetch('http://localhost:5001/api/challenges/published', {
+        const response = await fetch('/api/challenges/published', {
           headers: {
             Authorization: 'Bearer ' + token,
           },

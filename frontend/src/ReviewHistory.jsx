@@ -35,7 +35,7 @@ function ReviewHistory({ onOpenAttempt, onUnauthorized }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
       try {
-        const response = await fetch('http://localhost:5001/api/submissions/reviews', {
+        const response = await fetch('/api/submissions/reviews', {
           headers: {
             Authorization: 'Bearer ' + token,
           },

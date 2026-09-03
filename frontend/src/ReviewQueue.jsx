@@ -82,7 +82,7 @@ function ReviewQueue({
 
     try {
       const response = await fetch(
-        'http://localhost:5001/api/submissions/review-queue/' + attemptId,
+        '/api/submissions/review-queue/' + attemptId,
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -117,7 +117,7 @@ function ReviewQueue({
 
     const loadQueue = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/submissions/review-queue', {
+        const response = await fetch('/api/submissions/review-queue', {
           headers: {
             Authorization: 'Bearer ' + token,
           },
@@ -142,7 +142,7 @@ function ReviewQueue({
 
     const loadReviewed = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/submissions/reviewed', {
+        const response = await fetch('/api/submissions/reviewed', {
           headers: {
             Authorization: 'Bearer ' + token,
           },
@@ -160,7 +160,7 @@ function ReviewQueue({
 
     const loadReviewers = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/submissions/reviewers', {
+        const response = await fetch('/api/submissions/reviewers', {
           headers: {
             Authorization: 'Bearer ' + token,
           },
@@ -193,7 +193,7 @@ function ReviewQueue({
     setMessage('')
 
     try {
-      const response = await fetch('http://localhost:5001/api/submissions/' + path, {
+      const response = await fetch('/api/submissions/' + path, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -372,7 +372,7 @@ function ReviewQueue({
 
                 try {
                   const response = await fetch(
-                    'http://localhost:5001/api/submissions/review-queue/' +
+                    '/api/submissions/review-queue/' +
                       attempt._id +
                       '/comments',
                     {

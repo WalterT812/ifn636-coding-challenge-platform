@@ -53,7 +53,7 @@ function AttemptHistory({ challengeId, showChallenge, refreshKey, onOpenAttempt,
   useEffect(() => {
     const loadAttempts = async () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-      let url = 'http://localhost:5001/api/submissions'
+      let url = '/api/submissions'
 
       if (challengeId) {
         url += '?challengeId=' + challengeId

@@ -27,7 +27,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
 
       try {
         const response = await fetch(
-          'http://localhost:5001/api/submissions?challengeId=' + challengeId,
+          '/api/submissions?challengeId=' + challengeId,
           {
             headers: {
               Authorization: 'Bearer ' + token,
@@ -110,7 +110,7 @@ function SubmitSolution({ challengeId, onUnauthorized, onSubmitted, refreshKey }
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
     try {
-      const response = await fetch('http://localhost:5001/api/submissions', {
+      const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

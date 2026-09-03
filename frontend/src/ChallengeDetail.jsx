@@ -25,7 +25,7 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound, onOp
 
       try {
         const response = await fetch(
-          'http://localhost:5001/api/challenges/published/' + challengeId,
+          '/api/challenges/published/' + challengeId,
           {
             headers: {
               Authorization: 'Bearer ' + token,

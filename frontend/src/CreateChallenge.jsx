@@ -130,8 +130,8 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, onOpen
 
     const isEdit = Boolean(savedId)
     const url = isEdit
-      ? 'http://localhost:5001/api/challenges/' + savedId
-      : 'http://localhost:5001/api/challenges'
+      ? '/api/challenges/' + savedId
+      : '/api/challenges'
 
     const response = await fetch(url, {
       method: isEdit ? 'PUT' : 'POST',
@@ -153,7 +153,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, onOpen
 
   const updateStatus = async (id, nextStatus) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    const response = await fetch('http://localhost:5001/api/challenges/' + id + '/status', {
+    const response = await fetch('/api/challenges/' + id + '/status', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, onOpen
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
     try {
-      const response = await fetch('http://localhost:5001/api/challenges/' + savedId, {
+      const response = await fetch('/api/challenges/' + savedId, {
         method: 'DELETE',
         headers: {
           Authorization: 'Bearer ' + token,
