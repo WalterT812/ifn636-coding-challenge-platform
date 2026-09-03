@@ -131,6 +131,7 @@ function App() {
       '/register': 'challenges',
       '/progress': 'progress',
       '/history': 'history',
+      '/reviews': 'reviews',
       '/browsing-history': 'browsing',
     }
 
@@ -150,6 +151,7 @@ function App() {
               challenges: '/',
               progress: '/progress',
               history: '/history',
+              reviews: '/reviews',
               browsing: '/browsing-history',
               detail: '/challenges/' + id,
               attempt: '/attempts/' + id,

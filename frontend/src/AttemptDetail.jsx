@@ -114,8 +114,14 @@ function AttemptDetail({ attemptId, onBack, onUnauthorized, onNotFound }) {
           <p>Test Evidence: {attempt.testEvidence}</p>
           {attempt.decision ? (
             <div>
+              <p>Review Time: {formatTime(attempt.reviewedAt)}</p>
               <p>Decision: {attempt.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</p>
               <p>Feedback: {attempt.feedback}</p>
+              {(attempt.comments || []).map((item) => (
+                <p key={item._id}>
+                  Admin comment ({item.createdBy?.username || 'Admin'}): {item.text}
+                </p>
+              ))}
             </div>
           ) : null}
           {attempt.status === 'UNDER_REVIEW' ? (

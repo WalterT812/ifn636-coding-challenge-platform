@@ -143,7 +143,8 @@ router.get('/review-queue/:id', auth, canReview, async (req, res) => {
         const submission = await Submission.findById(req.params.id)
             .populate('challenge', 'challengeNumber title')
             .populate('learner', 'username email')
-            .populate('reviewer', 'username role');
+            .populate('reviewer', 'username role')
+            .populate('comments.createdBy', 'username');
 
         if (!submission || submission.status === 'CANCELLED') {
             return res.status(404).json({ message: 'Attempt not found' });
@@ -369,6 +370,80 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
     }
 });
 
+router.post('/review-queue/:id/comments', auth, canReview, async (req, res) => {
+    try {
+        const text = String(req.body.text || '').trim();
+
+        if (!text) {
+            return res.status(400).json({ text: 'This field is required' });
+        }
+
+        const submission = await Submission.findById(req.params.id);
+
+        if (!submission) {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        if (!submission.decision) {
+            return res.status(400).json({ message: 'Comments can be added after the review is completed' });
+        }
+
+        submission.comments.push({
+            text,
+            createdBy: req.user.userId,
+            createdAt: new Date(),
+        });
+        await submission.save();
+        await submission.populate([
+            { path: 'challenge', select: 'challengeNumber title' },
+            { path: 'learner', select: 'username email' },
+            { path: 'reviewer', select: 'username role' },
+            { path: 'comments.createdBy', select: 'username' },
+        ]);
+
+        return res.status(201).json(submission);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot add comment' });
+    }
+});
+
+router.get('/reviewed', auth, canReview, async (req, res) => {
+    try {
+        const submissions = await Submission.find({
+            decision: { $exists: true, $ne: null },
+        })
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username')
+            .populate('reviewer', 'username role')
+            .populate('comments.createdBy', 'username')
+            .sort({ reviewedAt: -1 });
+
+        return res.json(submissions);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load reviewed attempts' });
+    }
+});
+
+// learner can only see their own review history
+router.get('/reviews', auth, canSubmit, async (req, res) => {
+    try {
+        const submissions = await Submission.find({
+            learner: req.user.userId,
+            decision: { $exists: true, $ne: null },
+        })
+            .populate('challenge', 'challengeNumber title')
+            .populate('comments.createdBy', 'username')
+            .sort({ reviewedAt: -1 });
+
+        return res.json(submissions);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load review history' });
+    }
+});
+
 // learner can only see their own attempts, including cancelled
 router.get('/', auth, canSubmit, async (req, res) => {
     try {
@@ -380,6 +455,7 @@ router.get('/', auth, canSubmit, async (req, res) => {
 
         const submissions = await Submission.find(filter)
             .populate('challenge', 'challengeNumber title')
+            .populate('comments.createdBy', 'username')
             .sort({ submittedAt: -1 });
 
         return res.json(submissions);
@@ -394,7 +470,9 @@ router.get('/:id', auth, canSubmit, async (req, res) => {
         const submission = await Submission.findOne({
             _id: req.params.id,
             learner: req.user.userId,
-        }).populate('challenge', 'challengeNumber title');
+        })
+            .populate('challenge', 'challengeNumber title')
+            .populate('comments.createdBy', 'username');
 
         if (!submission) {
             return res.status(404).json({ message: 'Attempt not found' });

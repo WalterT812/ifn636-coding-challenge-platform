@@ -3,6 +3,7 @@ import BrowseChallenges from './BrowseChallenges.jsx'
 import ChallengeDetail from './ChallengeDetail.jsx'
 import AttemptHistory from './AttemptHistory.jsx'
 import AttemptDetail from './AttemptDetail.jsx'
+import ReviewHistory from './ReviewHistory.jsx'
 import NotFound from './NotFound.jsx'
 
 function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
@@ -31,6 +32,9 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
           </button>
           <button type="button" className="nav-link" onClick={() => onOpenPage('history')}>
             History
+          </button>
+          <button type="button" className="nav-link" onClick={() => onOpenPage('reviews')}>
+            Reviews
           </button>
           <button type="button" className="nav-link" onClick={() => onOpenPage('browsing')}>
             Browsing History
@@ -74,6 +78,13 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
         <NotFound onHome={() => onOpenPage('history')} />
       ) : null}
 
+      {page === 'reviews' ? (
+        <ReviewHistory
+          onUnauthorized={onUnauthorized}
+          onOpenAttempt={(id) => onOpenPage('attempt', id)}
+        />
+      ) : null}
+
       {page === 'attempt' && !attemptMissing ? (
         <AttemptDetail
           attemptId={attemptId}
@@ -83,7 +94,7 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
         />
       ) : null}
 
-      {page !== 'challenges' && page !== 'detail' && page !== 'history' && page !== 'attempt' ? (
+      {page !== 'challenges' && page !== 'detail' && page !== 'history' && page !== 'reviews' && page !== 'attempt' ? (
         <h1 className="page-title">{titles[page]}</h1>
       ) : null}
     </div>

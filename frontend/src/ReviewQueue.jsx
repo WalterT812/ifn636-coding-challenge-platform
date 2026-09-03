@@ -56,6 +56,9 @@ function ReviewQueue({
   const [decision, setDecision] = useState('PASS')
   const [feedback, setFeedback] = useState('')
   const [feedbackError, setFeedbackError] = useState('')
+  const [commentText, setCommentText] = useState('')
+  const [commentError, setCommentError] = useState('')
+  const [reviewed, setReviewed] = useState([])
   const [message, setMessage] = useState('')
   const username = getSaved('username')
   const role = getSaved('role')
@@ -137,6 +140,24 @@ function ReviewQueue({
       }
     }
 
+    const loadReviewed = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/submissions/reviewed', {
+          headers: {
+            Authorization: 'Bearer ' + token,
+          },
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          setReviewed(data)
+        }
+      } catch (error) {
+        setReviewed([])
+      }
+    }
+
     const loadReviewers = async () => {
       try {
         const response = await fetch('http://localhost:5001/api/submissions/reviewers', {
@@ -163,6 +184,7 @@ function ReviewQueue({
     } else {
       setAttempt(null)
       loadQueue()
+      loadReviewed()
     }
   }, [attemptId])
 
@@ -248,8 +270,14 @@ function ReviewQueue({
             <p>Test Evidence: {attempt.testEvidence}</p>
             {attempt.decision ? (
               <div>
+                <p>Review Time: {formatTime(attempt.reviewedAt)}</p>
                 <p>Decision: {attempt.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</p>
                 <p>Feedback: {attempt.feedback}</p>
+                {(attempt.comments || []).map((item) => (
+                  <p key={item._id}>
+                    Admin comment ({item.createdBy?.username || 'Admin'}): {item.text}
+                  </p>
+                ))}
               </div>
             ) : null}
           </div>
@@ -327,6 +355,78 @@ function ReviewQueue({
             </p>
           ) : null}
 
+          {attempt.decision ? (
+            <form
+              className="submit-box"
+              onSubmit={async (event) => {
+                event.preventDefault()
+                setCommentError('')
+                setMessage('')
+
+                if (!commentText.trim()) {
+                  setCommentError('This field is required')
+                  return
+                }
+
+                const token = getSaved('token')
+
+                try {
+                  const response = await fetch(
+                    'http://localhost:5001/api/submissions/review-queue/' +
+                      attempt._id +
+                      '/comments',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + token,
+                      },
+                      body: JSON.stringify({ text: commentText.trim() }),
+                    }
+                  )
+
+                  const data = await response.json()
+
+                  if (handleAuth(response)) {
+                    return
+                  }
+
+                  if (!response.ok) {
+                    if (data.text) {
+                      setCommentError(data.text)
+                      return
+                    }
+
+                    setMessage(data.message || 'Cannot add comment')
+                    return
+                  }
+
+                  setAttempt(data)
+                  setCommentText('')
+                } catch (error) {
+                  setMessage('Cannot connect to server')
+                }
+              }}
+            >
+              <h2>Add Comment</h2>
+              <div className="field">
+                <label>Comment:</label>
+                <textarea
+                  className={commentError ? 'box-medium input-error' : 'box-medium'}
+                  value={commentText}
+                  onChange={(event) => {
+                    setCommentText(event.target.value)
+                    setCommentError('')
+                  }}
+                />
+                {commentError ? <p className="field-error">{commentError}</p> : null}
+              </div>
+              <button type="submit" className="btn-primary">
+                Add Comment
+              </button>
+            </form>
+          ) : null}
+
           {canReassign ? (
             <div className="submit-box">
               <h2>Reassign Review</h2>
@@ -396,6 +496,40 @@ function ReviewQueue({
             ))}
           </tbody>
         </table>
+      ) : null}
+
+      {!attemptId && reviewed.length > 0 ? (
+        <div>
+          <h2 className="section-title">Reviewed Attempts</h2>
+          <table className="challenge-table">
+            <thead>
+              <tr>
+                <th>Challenge Number</th>
+                <th>Title</th>
+                <th>Learner</th>
+                <th>Attempt</th>
+                <th>Review Time</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviewed.map((item) => (
+                <tr key={item._id}>
+                  <td>{item.challenge?.challengeNumber || '-'}</td>
+                  <td>{item.challenge?.title || '-'}</td>
+                  <td>{item.learner?.username || '-'}</td>
+                  <td>
+                    <button type="button" className="table-link" onClick={() => onOpenAttempt(item._id)}>
+                      Attempt {item.attemptNumber}
+                    </button>
+                  </td>
+                  <td>{formatTime(item.reviewedAt)}</td>
+                  <td>{item.decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </div>
   )
