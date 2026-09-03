@@ -124,12 +124,31 @@ function App() {
       return <NotFound onHome={() => navigate('/')} />
     }
 
-    if (path === '/') {
-      return <Challenges onLogout={handleLogout} />
+    const learnerPages = {
+      '/': 'challenges',
+      '/login': 'challenges',
+      '/register': 'challenges',
+      '/progress': 'progress',
+      '/history': 'history',
+      '/browsing-history': 'browsing',
     }
 
-    if (path === '/login' || path === '/register') {
-      return <Challenges onLogout={handleLogout} />
+    if (learnerPages[path]) {
+      return (
+        <Challenges
+          onLogout={handleLogout}
+          page={learnerPages[path]}
+          onOpenPage={(name) => {
+            const urls = {
+              challenges: '/',
+              progress: '/progress',
+              history: '/history',
+              browsing: '/browsing-history',
+            }
+            navigate(urls[name])
+          }}
+        />
+      )
     }
 
     return <NotFound onHome={() => navigate('/')} />
