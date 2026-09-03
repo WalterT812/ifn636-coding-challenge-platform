@@ -1,78 +1,39 @@
 import { useState } from 'react'
+import Login from './Login.jsx'
+import Dashboard from './Dashboard.jsx'
 
 function App() {
-  const [loginName, setLoginName] = useState('')
-  const [password, setPassword] = useState('')
-  const [message, setMessage] = useState('')
+  // look in both places, because remember me uses localStorage
+  const savedToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+  const [isLoggedIn, setIsLoggedIn] = useState(!!savedToken)
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
-    setMessage('')
-
-    try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: loginName,
-          password: password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setMessage(data.message || 'Invalid email or password')
-        return
-      }
-
-      localStorage.setItem('token', data.token)
-      setMessage('Login successful')
-    } catch (error) {
-      setMessage('Cannot connect to server')
+  const handleLogin = (token, rememberMe) => {
+    // tick remember me = keep login after I close the browser
+    if (rememberMe) {
+      localStorage.setItem('token', token)
+      sessionStorage.removeItem('token')
+    } else {
+      // no tick = login is gone when I close the tab
+      sessionStorage.setItem('token', token)
+      localStorage.removeItem('token')
     }
+
+    setIsLoggedIn(true)
   }
 
-  return (
-    <div>
-      <h1>Coding Challenge Platform Admin Portal</h1>
+  const handleLogout = () => {
+    // delete token from both places
+    localStorage.removeItem('token')
+    sessionStorage.removeItem('token')
+    setIsLoggedIn(false)
+  }
 
-      <form className="login-box" onSubmit={handleLogin}>
-        <h2>Admin Login</h2>
+  // two pages: dashboard or login
+  if (isLoggedIn) {
+    return <Dashboard onLogout={handleLogout} />
+  }
 
-        <label>Email or Username:</label>
-        <input
-          type="text"
-          value={loginName}
-          onChange={(event) => setLoginName(event.target.value)}
-          required
-        />
-
-        <label>Password:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-
-        <div className="row">
-          <label>
-            <input type="checkbox" /> Remember Me
-          </label>
-          <button type="button" className="link">Forgot Password?</button>
-        </div>
-
-        <button type="submit">Login</button>
-
-        {message && <p className="message">{message}</p>}
-
-        <p className="note">Only authorised Admin accounts can log in.</p>
-      </form>
-    </div>
-  )
+  return <Login onLogin={handleLogin} />
 }
 
 export default App

@@ -4,13 +4,53 @@ body {
   margin: 0;
 }
 
-h1 {
+.login-title {
   text-align: center;
   margin-top: 160px;
   margin-bottom: 66px;
   font-size: 28px;
   font-weight: 600;
   color: #1e3a5f;
+}
+
+.nav {
+  /* size */
+  height: 57px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  /* style */
+  background: #1e3a5f;
+  color: white;
+}
+
+.nav-logo {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+}
+
+.nav-logout {
+  background: none;
+  border: none;
+  padding: 0;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.page-title {
+  margin: 40px 32px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #111827;
 }
 
 .login-box {
