@@ -6,6 +6,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const challengeRoutes = require('./routes/challenges');
+const submissionRoutes = require('./routes/submissions');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 // challenge APIs
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
