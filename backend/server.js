@@ -6,6 +6,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const challengeRoutes = require('./routes/challenges');
+const publishedChallengeRoutes = require('./routes/publishedChallenges');
 const submissionRoutes = require('./routes/submissions');
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.json());
 // login APIs
 app.use('/api/auth', authRoutes);
 // challenge APIs
+app.use('/api/challenges/published', publishedChallengeRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/submissions', submissionRoutes);
 
