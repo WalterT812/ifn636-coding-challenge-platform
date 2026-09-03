@@ -363,6 +363,34 @@ input:disabled {
   font-weight: 600;
 }
 
+.challenge-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 32px 40px;
+}
+
+.challenge-card {
+  width: 280px;
+  box-sizing: border-box;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.challenge-card h2 {
+  margin: 8px 0 12px;
+  font-size: 18px;
+  text-align: left;
+}
+
+.challenge-card p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #616b78;
+}
+
 .table-link {
   background: none;
   border: none;

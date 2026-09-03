@@ -39,7 +39,10 @@ function BrowseChallenges({ onUnauthorized }) {
           return
         }
 
-        setChallenges(data)
+        const newestFirst = data.slice().sort((a, b) => {
+          return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
+        })
+        setChallenges(newestFirst)
       } catch (error) {
         setMessage('Cannot connect to server')
       }
@@ -59,28 +62,17 @@ function BrowseChallenges({ onUnauthorized }) {
       ) : null}
 
       {challenges.length > 0 && (
-        <table className="challenge-table">
-          <thead>
-            <tr>
-              <th>Number</th>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Tier</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {challenges.map((item) => (
-              <tr key={item._id}>
-                <td>{item.challengeNumber || '-'}</td>
-                <td>{item.title || '(no title)'}</td>
-                <td>{item.type || '-'}</td>
-                <td>{item.tier || '-'}</td>
-                <td>{formatDate(item.publishedAt)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="challenge-cards">
+          {challenges.map((item) => (
+            <div key={item._id} className="challenge-card">
+              <p>{item.challengeNumber || '-'}</p>
+              <h2>{item.title || '(no title)'}</h2>
+              <p>Type: {item.type || '-'}</p>
+              <p>Difficulty: {item.tier || '-'}</p>
+              <p>Published: {formatDate(item.publishedAt)}</p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
