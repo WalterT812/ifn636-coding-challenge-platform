@@ -401,6 +401,19 @@ input:disabled {
   color: #111827;
 }
 
+.submit-box {
+  margin: 0 32px 40px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.submit-box h2 {
+  margin: 0 0 16px;
+  text-align: left;
+}
+
 .challenge-card h2 {
   margin: 8px 0 12px;
   font-size: 18px;

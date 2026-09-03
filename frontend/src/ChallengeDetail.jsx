@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import SubmitSolution from './SubmitSolution.jsx'
 
 function formatDate(value) {
   if (!value) {
@@ -81,6 +82,10 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized, onNotFound }) {
           <p>Starter Repository: {challenge.starterRepo || '-'}</p>
           <p>Environment: {challenge.environment || 'Python 3'}</p>
         </div>
+      )}
+
+      {challenge && (
+        <SubmitSolution challengeId={challenge._id} onUnauthorized={onUnauthorized} />
       )}
     </div>
   )

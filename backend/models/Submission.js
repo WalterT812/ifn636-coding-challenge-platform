@@ -12,6 +12,43 @@ const submissionSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        repoUrl: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        commitUrl: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        explanation: {
+            type: String,
+            required: true,
+        },
+        testEvidence: {
+            type: String,
+            required: true,
+        },
+        attemptNumber: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 10,
+        },
+        submittedAt: {
+            type: Date,
+            default: Date.now,
+        },
+        status: {
+            type: String,
+            enum: ['SUBMITTED', 'UNDER_REVIEW'],
+            default: 'SUBMITTED',
+        },
+        selectedForReview: {
+            type: Boolean,
+            default: false, // latest attempt is set true
+        },
     },
     {
         timestamps: true,

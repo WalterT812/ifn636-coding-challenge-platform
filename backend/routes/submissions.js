@@ -1,6 +1,7 @@
 const express = require('express');
 const Challenge = require('../models/Challenge');
 const Submission = require('../models/Submission');
+const Progress = require('../models/Progress');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
@@ -8,27 +9,95 @@ const { permissions } = require('../permissions');
 const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
 
-function acceptsNewSubmission(status) {
-    return status === 'PUBLISHED';
+function isHttpUrl(value) {
+    try {
+        const url = new URL(String(value || '').trim());
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (error) {
+        return false;
+    }
 }
 
 router.post('/', auth, canSubmit, async (req, res) => {
     try {
+        const repoUrl = String(req.body.repoUrl || '').trim();
+        const commitUrl = String(req.body.commitUrl || '').trim();
+        const explanation = String(req.body.explanation || '').trim();
+        const testEvidence = String(req.body.testEvidence || '').trim();
+        const fieldErrors = {};
+
+        if (!repoUrl) {
+            fieldErrors.repoUrl = 'This field is required';
+        } else if (!isHttpUrl(repoUrl)) {
+            fieldErrors.repoUrl = 'Please enter a valid URL';
+        }
+
+        if (!commitUrl) {
+            fieldErrors.commitUrl = 'This field is required';
+        } else if (!isHttpUrl(commitUrl)) {
+            fieldErrors.commitUrl = 'Please enter a valid URL';
+        }
+
+        if (!explanation) {
+            fieldErrors.explanation = 'This field is required';
+        }
+
+        if (!testEvidence) {
+            fieldErrors.testEvidence = 'This field is required';
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).json(fieldErrors);
+        }
+
         const challenge = await Challenge.findById(req.body.challengeId);
 
         if (!challenge) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
-        // closed and draft cannot take a new submission
-        if (!acceptsNewSubmission(challenge.status)) {
+        if (challenge.status !== 'PUBLISHED') {
             return res.status(400).json({ message: 'This challenge does not accept new submissions' });
         }
+
+        const existing = await Submission.find({
+            learner: req.user.userId,
+            challenge: challenge._id,
+        });
+
+        if (existing.length >= 10) {
+            return res.status(400).json({ message: 'You can submit at most 10 attempts' });
+        }
+
+        const underReview = existing.some((item) => item.status === 'UNDER_REVIEW');
+
+        if (underReview) {
+            return res.status(400).json({ message: 'You already have an attempt under review' });
+        }
+
+        await Submission.updateMany(
+            { learner: req.user.userId, challenge: challenge._id },
+            { $set: { selectedForReview: false } }
+        );
 
         const submission = await Submission.create({
             challenge: challenge._id,
             learner: req.user.userId,
+            repoUrl,
+            commitUrl,
+            explanation,
+            testEvidence,
+            attemptNumber: existing.length + 1,
+            submittedAt: new Date(),
+            status: 'SUBMITTED',
+            selectedForReview: true,
         });
+
+        await Progress.findOneAndUpdate(
+            { learner: req.user.userId, challenge: challenge._id },
+            { status: 'IN_PROGRESS' },
+            { upsert: true, new: true }
+        );
 
         return res.status(201).json(submission);
     } catch (error) {
