@@ -37,6 +37,7 @@ body {
   font-size: 15px;
 }
 
+.nav-link,
 .nav-logout {
   background: none;
   border: none;
@@ -86,7 +87,8 @@ label {
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+textarea {
   /* size */
   width: 100%;
   height: 40px;
@@ -131,7 +133,19 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-button[type="submit"] {
+textarea {
+  height: auto;
+  resize: vertical;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #616b78;
+}
+
+.login-box button[type="submit"] {
   /* size */
   display: block;
   width: 160px;
@@ -158,4 +172,82 @@ button[type="submit"] {
   margin-top: 16px;
   font-size: 12px;
   color: #111827;
+}
+
+.create-title {
+  text-align: center;
+  margin: 80px 32px 40px;
+  font-size: 32px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.form-panels {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  flex-wrap: wrap;
+  padding: 0 32px;
+}
+
+.form-panel {
+  width: 486px;
+  box-sizing: border-box;
+  padding: 21px 20px 8px;
+  background: #d9d9d9;
+}
+
+.form-panel input,
+.form-panel textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.form-panel input {
+  height: 44px;
+}
+
+.box-tall {
+  height: 140px;
+}
+
+.box-medium {
+  height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 29px;
+  margin: 48px 32px 40px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-cancel {
+  width: 160px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: none;
+  background: #2563eb;
+  color: white;
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #616b78;
 }

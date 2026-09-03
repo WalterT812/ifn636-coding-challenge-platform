@@ -1,4 +1,4 @@
-function Dashboard({ onLogout }) {
+function Dashboard({ onLogout, onOpenCreate }) {
   return (
     <div>
       {/* top menu */}
@@ -6,7 +6,9 @@ function Dashboard({ onLogout }) {
         <span className="nav-logo">Coding Challenge Platform</span>
         <div className="nav-links">
           <span>Dashboard</span>
-          <span>Challenge Management</span>
+          <button type="button" className="nav-link" onClick={onOpenCreate}>
+            Challenge Management
+          </button>
           <span>Review Queue</span>
           {/* logout button, click to go back to login */}
           <button type="button" className="nav-logout" onClick={onLogout}>
