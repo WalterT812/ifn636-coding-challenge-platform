@@ -30,7 +30,7 @@ const challengeSchema = new mongoose.Schema(
         },
         starterRepo: {
             type: String,
-            trim: true,
+            trim: true, // github link the learner starts from
         },
         reviewCriteria: {
             type: String,

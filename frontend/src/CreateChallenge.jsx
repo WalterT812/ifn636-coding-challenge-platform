@@ -8,6 +8,7 @@ const emptyForm = {
   description: '',
   testExample: '',
   expectedResult: '',
+  starterRepo: '',
 }
 
 const requiredFields = [
@@ -17,6 +18,7 @@ const requiredFields = [
   'description',
   'testExample',
   'expectedResult',
+  'starterRepo',
 ]
 
 function CreateChallenge({ onLogout, onBack }) {
@@ -243,6 +245,18 @@ function CreateChallenge({ onLogout, onBack }) {
               onChange={(event) => updateField('expectedResult', event.target.value)}
             />
             {errors.expectedResult && <p className="field-error">This field is required</p>}
+          </div>
+
+          <div className="field">
+            {/* github repo the learner clones to start the task */}
+            <input
+              type="text"
+              placeholder="Starter Repository Link *"
+              value={form.starterRepo}
+              onChange={(event) => updateField('starterRepo', event.target.value)}
+              className={errors.starterRepo ? 'input-error' : ''}
+            />
+            {errors.starterRepo && <p className="field-error">This field is required</p>}
           </div>
 
           <div className="field">
