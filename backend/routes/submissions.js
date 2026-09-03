@@ -8,6 +8,12 @@ const { permissions } = require('../permissions');
 
 const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
+const canReview = requireRole(...permissions.reviewQueue);
+
+const waitingForReview = {
+    selectedForReview: true,
+    status: { $nin: ['CANCELLED', 'PASSED', 'FAILED'] },
+};
 
 function isHttpUrl(value) {
     try {
@@ -103,6 +109,40 @@ router.post('/', auth, canSubmit, async (req, res) => {
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot create submission' });
+    }
+});
+
+// admin queue: latest selected attempts, cancelled is hidden
+router.get('/review-queue', auth, canReview, async (req, res) => {
+    try {
+        const submissions = await Submission.find(waitingForReview)
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username')
+            .sort({ submittedAt: -1 });
+
+        return res.json(submissions);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load review queue' });
+    }
+});
+
+router.get('/review-queue/:id', auth, canReview, async (req, res) => {
+    try {
+        const submission = await Submission.findOne({
+            _id: req.params.id,
+            ...waitingForReview,
+        })
+            .populate('challenge', 'challengeNumber title')
+            .populate('learner', 'username');
+
+        if (!submission) {
+            return res.status(404).json({ message: 'Attempt not found' });
+        }
+
+        return res.json(submission);
+    } catch (error) {
+        return res.status(404).json({ message: 'Attempt not found' });
     }
 });
 

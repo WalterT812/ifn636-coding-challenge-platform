@@ -6,6 +6,7 @@ import Dashboard from './Dashboard.jsx'
 import ChallengeList from './ChallengeList.jsx'
 import CreateChallenge from './CreateChallenge.jsx'
 import Challenges from './Challenges.jsx'
+import ReviewQueue from './ReviewQueue.jsx'
 import NotFound from './NotFound.jsx'
 import Forbidden from './Forbidden.jsx'
 import { can } from './permissions.js'
@@ -172,6 +173,30 @@ function App() {
     }
 
     const canManageChallenges = can(role, 'challengeManagement')
+    const canReviewQueue = can(role, 'reviewQueue')
+    const reviewAttemptId = path.startsWith('/admin/review-queue/')
+      ? path.slice('/admin/review-queue/'.length)
+      : ''
+
+    if (path === '/admin/review-queue' || reviewAttemptId) {
+      if (!canReviewQueue) {
+        return <Forbidden onHome={goAdminHome} />
+      }
+
+      return (
+        <ReviewQueue
+          attemptId={reviewAttemptId}
+          onLogout={handleLogout}
+          onForbidden={() => setErrorPage('403')}
+          onUnauthorized={handleLogout}
+          onNotFound={() => setErrorPage('404')}
+          onOpenDashboard={() => navigate('/admin/dashboard')}
+          onOpenList={() => navigate('/admin/challenges')}
+          onOpenQueue={() => navigate('/admin/review-queue')}
+          onOpenAttempt={(id) => navigate('/admin/review-queue/' + id)}
+        />
+      )
+    }
 
     if (path === '/admin/create') {
       if (!canManageChallenges) {
@@ -197,6 +222,10 @@ function App() {
             setEditingChallenge(null)
             navigate('/admin/challenges')
           }}
+          onOpenReview={() => {
+            setEditingChallenge(null)
+            navigate('/admin/review-queue')
+          }}
         />
       )
     }
@@ -212,6 +241,7 @@ function App() {
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
           onOpenDashboard={() => navigate('/admin/dashboard')}
+          onOpenReview={() => navigate('/admin/review-queue')}
           onCreate={() => {
             setEditingChallenge(null)
             navigate('/admin/create')
@@ -229,7 +259,9 @@ function App() {
         <Dashboard
           onLogout={handleLogout}
           canManageChallenges={canManageChallenges}
+          canReviewQueue={canReviewQueue}
           onOpenList={() => navigate('/admin/challenges')}
+          onOpenReview={() => navigate('/admin/review-queue')}
         />
       )
     }
