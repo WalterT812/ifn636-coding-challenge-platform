@@ -7,7 +7,8 @@ const router = express.Router();
 // create a challenge, admin only
 router.post('/', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+        // SUPER_ADMIN cannot manage challenges
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'ADMIN_MANAGER') {
             return res.status(401).json({ message: 'Only admin can create a challenge' });
         }
 

@@ -26,8 +26,9 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // only admin can use this login
-        if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+        // three admin types can use this login, learners cannot
+        const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
+        if (!adminRoles.includes(user.role)) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 

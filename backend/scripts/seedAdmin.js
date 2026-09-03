@@ -30,7 +30,7 @@ const startSeed = async () => {
             email: adminEmail,
             username: 'superadmin',
             passwordHash,
-            role: 'SUPER_ADMIN',
+            role: 'SUPER_ADMIN', // first account, manages admins only
             active: true,
         });
 

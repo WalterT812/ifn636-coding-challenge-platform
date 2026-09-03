@@ -21,7 +21,11 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['SUPER_ADMIN', 'ADMIN', 'USER'], // admin or learner
+            // SUPER_ADMIN: seed account, manage admins only, no challenges or reviews
+            // ADMIN_MANAGER: manage other admins, learners, challenges, and reviews
+            // ADMIN: manage learners and challenges, review attempts, cannot manage admins
+            // USER: learner
+            enum: ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN', 'USER'],
             default: 'USER',
         },
         active: {
