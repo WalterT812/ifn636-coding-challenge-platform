@@ -310,3 +310,49 @@ input:disabled {
   font-size: 14px;
   color: #111827;
 }
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+}
+
+.list-header .page-title {
+  margin: 40px 0;
+}
+
+.list-empty {
+  margin: 0 32px 40px;
+  color: #616b78;
+}
+
+.challenge-table {
+  width: calc(100% - 64px);
+  margin: 0 32px 40px;
+  border-collapse: collapse;
+  background: white;
+}
+
+.challenge-table th,
+.challenge-table td {
+  padding: 12px;
+  border-bottom: 1px solid #d1d5db;
+  text-align: left;
+}
+
+.challenge-table th {
+  background: #1e3a5f;
+  color: white;
+  font-weight: 600;
+}
+
+.table-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: underline;
+}

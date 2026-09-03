@@ -53,6 +53,24 @@ function draftFields(body) {
     return data;
 }
 
+// admin list: drafts, published and closed
+router.get('/', auth, async (req, res) => {
+    try {
+        if (!canManageChallenges(req.user.role)) {
+            return res.status(401).json({ message: 'Only admin can view challenges' });
+        }
+
+        const challenges = await Challenge.find()
+            .populate('createdBy', 'username')
+            .sort({ createdAt: -1 });
+
+        return res.json(challenges);
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot load challenges' });
+    }
+});
+
 // save a new draft
 router.post('/', auth, async (req, res) => {
     try {

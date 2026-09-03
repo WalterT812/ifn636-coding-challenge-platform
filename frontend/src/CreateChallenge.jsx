@@ -23,15 +23,37 @@ const requiredFields = [
   'reviewCriteria',
 ]
 
-function CreateChallenge({ onLogout, onBack }) {
-  const [form, setForm] = useState(emptyForm)
+function formFromChallenge(challenge) {
+  if (!challenge) {
+    return emptyForm
+  }
+
+  return {
+    title: challenge.title || '',
+    type: challenge.type || '',
+    tier: challenge.tier ? String(challenge.tier) : '',
+    keywords: challenge.keywords || [],
+    description: challenge.description || '',
+    testExample: challenge.testExample || '',
+    expectedResult: challenge.expectedResult || '',
+    starterRepo: challenge.starterRepo || '',
+    reviewCriteria: challenge.reviewCriteria || '',
+  }
+}
+
+function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challenge }) {
+  const [form, setForm] = useState(() => formFromChallenge(challenge))
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
   const [message, setMessage] = useState('')
-  const [savedId, setSavedId] = useState('')
-  const [challengeNumber, setChallengeNumber] = useState('Auto')
-  const publisher = localStorage.getItem('username') || sessionStorage.getItem('username') || ''
-  const createdDate = new Date().toLocaleDateString('en-GB', {
+  const [savedId, setSavedId] = useState(challenge?._id || '')
+  const [challengeNumber, setChallengeNumber] = useState(challenge?.challengeNumber || 'Auto')
+  const publisher =
+    challenge?.createdBy?.username ||
+    localStorage.getItem('username') ||
+    sessionStorage.getItem('username') ||
+    ''
+  const createdDate = new Date(challenge?.createdAt || Date.now()).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -131,10 +153,12 @@ function CreateChallenge({ onLogout, onBack }) {
       <div className="nav">
         <span className="nav-logo">Coding Challenge Platform</span>
         <div className="nav-links">
-          <button type="button" className="nav-link" onClick={onBack}>
+          <button type="button" className="nav-link" onClick={onOpenDashboard}>
             Dashboard
           </button>
-          <span>Challenge Management</span>
+          <button type="button" className="nav-link" onClick={onOpenList}>
+            Challenge Management
+          </button>
           <span>Review Queue</span>
           <button type="button" className="nav-logout" onClick={onLogout}>
             Logout

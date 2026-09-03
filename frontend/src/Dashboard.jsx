@@ -1,4 +1,4 @@
-function Dashboard({ onLogout, onOpenCreate }) {
+function Dashboard({ onLogout, onOpenList }) {
   return (
     <div>
       {/* top menu */}
@@ -6,7 +6,7 @@ function Dashboard({ onLogout, onOpenCreate }) {
         <span className="nav-logo">Coding Challenge Platform</span>
         <div className="nav-links">
           <span>Dashboard</span>
-          <button type="button" className="nav-link" onClick={onOpenCreate}>
+          <button type="button" className="nav-link" onClick={onOpenList}>
             Challenge Management
           </button>
           <span>Review Queue</span>
