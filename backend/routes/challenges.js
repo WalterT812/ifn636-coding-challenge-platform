@@ -127,6 +127,7 @@ router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
             }
 
             challenge.status = 'PUBLISHED';
+            challenge.publishedAt = new Date();
         } else if (nextStatus === 'CLOSED') {
             if (challenge.status !== 'PUBLISHED') {
                 return res.status(400).json({ message: 'Only a published challenge can be closed' });

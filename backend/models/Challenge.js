@@ -50,6 +50,9 @@ const challengeSchema = new mongoose.Schema(
             type: String,
             trim: true, // filled by the server, e.g. CCP-CH-001
         },
+        publishedAt: {
+            type: Date, // set by the server when status becomes PUBLISHED
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User', // who published it, set from the login token

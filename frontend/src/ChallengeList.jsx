@@ -110,7 +110,7 @@ function ChallengeList({ onLogout, onOpenDashboard, onCreate, onOpenChallenge, o
                 <td>{item.type || '-'}</td>
                 <td>{item.status}</td>
                 <td>{item.createdBy?.username || '-'}</td>
-                <td>{formatDate(item.createdAt)}</td>
+                <td>{formatDate(item.publishedAt || item.createdAt)}</td>
               </tr>
             ))}
           </tbody>

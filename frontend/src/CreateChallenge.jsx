@@ -49,16 +49,26 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
   const [savedId, setSavedId] = useState(challenge?._id || '')
   const [challengeNumber, setChallengeNumber] = useState(challenge?.challengeNumber || 'Auto')
   const [status, setStatus] = useState(challenge?.status || 'DRAFT')
+  const [publishedAt, setPublishedAt] = useState(challenge?.publishedAt || '')
   const publisher =
     challenge?.createdBy?.username ||
     localStorage.getItem('username') ||
     sessionStorage.getItem('username') ||
     ''
-  const createdDate = new Date(challenge?.createdAt || Date.now()).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const formatDay = (value) => {
+    if (!value) {
+      return ''
+    }
+
+    return new Date(value).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  const createdDate = formatDay(challenge?.createdAt || Date.now())
+  const publishedDate = formatDay(publishedAt)
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value })
@@ -200,6 +210,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
       }
 
       setStatus(data.status)
+      setPublishedAt(data.publishedAt)
       setMessage('Challenge published')
     } catch (error) {
       setMessage('Cannot connect to server')
@@ -460,7 +471,11 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
 
           <div className="field">
             {/* shown as today; the database also stores createdAt */}
-            <input type="text" value={'Date: ' + createdDate} disabled />
+            <input
+              type="text"
+              value={publishedDate ? 'Published: ' + publishedDate : 'Date: ' + createdDate}
+              disabled
+            />
           </div>
         </div>
       </div>
