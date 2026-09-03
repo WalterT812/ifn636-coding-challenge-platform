@@ -1,6 +1,7 @@
 import BrowseChallenges from './BrowseChallenges.jsx'
+import ChallengeDetail from './ChallengeDetail.jsx'
 
-function Challenges({ onLogout, page, onOpenPage, onUnauthorized }) {
+function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId }) {
   const titles = {
     progress: 'Progress',
     history: 'History',
@@ -31,10 +32,23 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized }) {
       </div>
 
       {page === 'challenges' ? (
-        <BrowseChallenges onUnauthorized={onUnauthorized} />
-      ) : (
+        <BrowseChallenges
+          onUnauthorized={onUnauthorized}
+          onOpenChallenge={(id) => onOpenPage('detail', id)}
+        />
+      ) : null}
+
+      {page === 'detail' ? (
+        <ChallengeDetail
+          challengeId={challengeId}
+          onUnauthorized={onUnauthorized}
+          onBack={() => onOpenPage('challenges')}
+        />
+      ) : null}
+
+      {page !== 'challenges' && page !== 'detail' ? (
         <h1 className="page-title">{titles[page]}</h1>
-      )}
+      ) : null}
     </div>
   )
 }

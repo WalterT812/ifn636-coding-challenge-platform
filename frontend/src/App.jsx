@@ -133,18 +133,22 @@ function App() {
       '/browsing-history': 'browsing',
     }
 
-    if (learnerPages[path]) {
+    const challengeId = path.startsWith('/challenges/') ? path.slice('/challenges/'.length) : ''
+
+    if (learnerPages[path] || challengeId) {
       return (
         <Challenges
           onLogout={handleLogout}
           onUnauthorized={handleLogout}
-          page={learnerPages[path]}
-          onOpenPage={(name) => {
+          page={challengeId ? 'detail' : learnerPages[path]}
+          challengeId={challengeId}
+          onOpenPage={(name, id) => {
             const urls = {
               challenges: '/',
               progress: '/progress',
               history: '/history',
               browsing: '/browsing-history',
+              detail: '/challenges/' + id,
             }
             navigate(urls[name])
           }}

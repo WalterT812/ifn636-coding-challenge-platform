@@ -12,7 +12,7 @@ function formatDate(value) {
   })
 }
 
-function BrowseChallenges({ onUnauthorized }) {
+function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
 
@@ -64,13 +64,18 @@ function BrowseChallenges({ onUnauthorized }) {
       {challenges.length > 0 && (
         <div className="challenge-cards">
           {challenges.map((item) => (
-            <div key={item._id} className="challenge-card">
+            <button
+              key={item._id}
+              type="button"
+              className="challenge-card"
+              onClick={() => onOpenChallenge(item._id)}
+            >
               <p>{item.challengeNumber || '-'}</p>
               <h2>{item.title || '(no title)'}</h2>
               <p>Type: {item.type || '-'}</p>
               <p>Difficulty: {item.tier || '-'}</p>
               <p>Published: {formatDate(item.publishedAt)}</p>
-            </div>
+            </button>
           ))}
         </div>
       )}

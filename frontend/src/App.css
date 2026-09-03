@@ -377,6 +377,28 @@ input:disabled {
   background: #fff;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.detail-box {
+  margin: 0 32px 40px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.detail-box h2 {
+  margin: 8px 0 16px;
+  text-align: left;
+}
+
+.detail-box p {
+  margin: 8px 0;
+  font-size: 15px;
+  color: #111827;
 }
 
 .challenge-card h2 {
