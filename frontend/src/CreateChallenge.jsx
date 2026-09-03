@@ -48,6 +48,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
   const [message, setMessage] = useState('')
   const [savedId, setSavedId] = useState(challenge?._id || '')
   const [challengeNumber, setChallengeNumber] = useState(challenge?.challengeNumber || 'Auto')
+  const [status, setStatus] = useState(challenge?.status || 'DRAFT')
   const publisher =
     challenge?.createdBy?.username ||
     localStorage.getItem('username') ||
@@ -167,7 +168,31 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
 
       setSavedId(data._id)
       setChallengeNumber(data.challengeNumber)
+      setStatus(data.status)
       setMessage('Challenge published')
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
+  const handleClose = async () => {
+    if (status !== 'PUBLISHED' || !savedId) {
+      setMessage('Only a published challenge can be closed')
+      return
+    }
+
+    setErrors({})
+    setMessage('')
+
+    try {
+      const data = await saveChallenge('CLOSED')
+
+      if (!data) {
+        return
+      }
+
+      setStatus(data.status)
+      setMessage('Challenge closed')
     } catch (error) {
       setMessage('Cannot connect to server')
     }
@@ -186,6 +211,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
 
       setSavedId(data._id)
       setChallengeNumber(data.challengeNumber)
+      setStatus(data.status)
       setMessage('Draft saved')
     } catch (error) {
       setMessage('Cannot connect to server')
@@ -362,12 +388,21 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, challe
       </div>
 
       <div className="form-actions">
-        <button type="button" className="btn-secondary" onClick={saveDraft}>
-          Save Draft
-        </button>
-        <button type="button" className="btn-primary" onClick={handlePublish}>
-          Publish Challenge
-        </button>
+        {status === 'DRAFT' && (
+          <button type="button" className="btn-secondary" onClick={saveDraft}>
+            Save Draft
+          </button>
+        )}
+        {status === 'DRAFT' && (
+          <button type="button" className="btn-primary" onClick={handlePublish}>
+            Publish Challenge
+          </button>
+        )}
+        {status === 'PUBLISHED' && (
+          <button type="button" className="btn-cancel" onClick={handleClose}>
+            Close Challenge
+          </button>
+        )}
         <button type="button" className="btn-cancel" onClick={onBack}>
           Cancel
         </button>
