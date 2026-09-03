@@ -4,19 +4,16 @@ const challengeSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: true,
-            trim: true,
+            trim: true, // draft can skip this
         },
         type:{
             type: String,
-            enum: ['Debugging', 'Feature', 'Refactoring', 'Security'], // challenge type
-            required: true,
+            enum: ['Debugging', 'Feature', 'Refactoring', 'Security'],
         },
         tier: {
             type: Number,
             min: 1,
             max: 8, // difficulty 1 to 8
-            required: true,
         },
         keywords: {
             type: [String], // more than one, e.g. login, python
@@ -24,24 +21,19 @@ const challengeSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            required: true,
         },
         testExample: {
             type: String,
-            required: true,
         },
         expectedResult: {
             type: String,
-            required: true,
         },
         starterRepo: {
             type: String,
-            required: true,
             trim: true,
         },
         reviewCriteria: {
             type: String,
-            required: true,
         },
         environment: {
             type: String,

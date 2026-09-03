@@ -23,6 +23,9 @@ function CreateChallenge({ onLogout, onBack }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
+  const [message, setMessage] = useState('')
+  const [savedId, setSavedId] = useState('')
+  const [challengeNumber, setChallengeNumber] = useState('Auto')
   const publisher = localStorage.getItem('username') || sessionStorage.getItem('username') || ''
   const createdDate = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -74,6 +77,51 @@ function CreateChallenge({ onLogout, onBack }) {
     setErrors(nextErrors)
   }
 
+  const saveDraft = async () => {
+    setErrors({})
+    setMessage('')
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    const body = {
+      keywords: form.keywords,
+    }
+
+    requiredFields.forEach((name) => {
+      if (String(form[name]).trim()) {
+        body[name] = name === 'tier' ? Number(form.tier) : form[name].trim()
+      }
+    })
+
+    const isEdit = Boolean(savedId)
+    const url = isEdit
+      ? 'http://localhost:5001/api/challenges/' + savedId
+      : 'http://localhost:5001/api/challenges'
+
+    try {
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify(body),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message || 'Cannot create challenge')
+        return
+      }
+
+      setSavedId(data._id)
+      setChallengeNumber(data.challengeNumber)
+      setMessage('Draft saved')
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
   return (
     <div>
       <div className="nav">
@@ -96,7 +144,7 @@ function CreateChallenge({ onLogout, onBack }) {
         <div className="form-panel">
           <div className="field">
             {/* we do not type this, the server makes CCP-CH-001, 002, ... */}
-            <input type="text" value="Challenge Number: Auto" disabled />
+            <input type="text" value={'Challenge Number: ' + challengeNumber} disabled />
           </div>
 
           <div className="field">
@@ -214,7 +262,7 @@ function CreateChallenge({ onLogout, onBack }) {
       </div>
 
       <div className="form-actions">
-        <button type="button" className="btn-secondary">
+        <button type="button" className="btn-secondary" onClick={saveDraft}>
           Save Draft
         </button>
         <button type="button" className="btn-primary" onClick={handlePublish}>
@@ -224,6 +272,8 @@ function CreateChallenge({ onLogout, onBack }) {
           Cancel
         </button>
       </div>
+
+      {message && <p className="form-message">{message}</p>}
     </div>
   )
 }

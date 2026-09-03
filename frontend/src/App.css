@@ -303,3 +303,10 @@ input:disabled {
   border: 1px solid #d1d5db;
   color: #616b78;
 }
+
+.form-message {
+  text-align: center;
+  margin: 0 32px 40px;
+  font-size: 14px;
+  color: #111827;
+}
