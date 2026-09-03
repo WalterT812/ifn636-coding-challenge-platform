@@ -16,7 +16,7 @@ function getSavedRole() {
 }
 
 function isLearnerRole(role) {
-  return role === 'LEARNER' || role === 'USER'
+  return role === 'LEARNER'
 }
 
 function App() {

@@ -29,6 +29,10 @@ const startServer = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB connected');
 
+        // old student accounts used USER; now they are LEARNER
+        const User = require('./models/User');
+        await User.updateMany({ role: 'USER' }, { $set: { role: 'LEARNER' } });
+
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });

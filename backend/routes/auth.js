@@ -7,7 +7,6 @@ const User = require('../models/User');
 const router = express.Router();
 
 const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
-const learnerRoles = ['LEARNER', 'USER'];
 
 function isStrongPassword(password) {
     return (
@@ -18,20 +17,20 @@ function isStrongPassword(password) {
     );
 }
 
-function makeToken(user) {
+function makeToken(user, expiresIn) {
     return jwt.sign(
         {
             userId: user._id,
             role: user.role,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn } // '1h' for admin, '7d' for learner
     );
 }
 
-function userPayload(user) {
+function userPayload(user, expiresIn) {
     return {
-        token: makeToken(user),
+        token: makeToken(user, expiresIn),
         user: {
             id: user._id,
             email: user.email,
@@ -81,7 +80,8 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        return res.json(userPayload(user));
+        // admin session lasts 1 hour
+        return res.json(userPayload(user, '1h'));
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ message: 'Server error' });
@@ -99,7 +99,7 @@ router.post('/learner-login', async (req, res) => {
 
         const user = await findByLoginName(loginName);
 
-        if (!user || !learnerRoles.includes(user.role) || !user.active) {
+        if (!user || user.role !== 'LEARNER' || !user.active) {
             return res.status(401).json({ message: 'Email/username or password is incorrect.' });
         }
 
@@ -109,7 +109,8 @@ router.post('/learner-login', async (req, res) => {
             return res.status(401).json({ message: 'Email/username or password is incorrect.' });
         }
 
-        return res.json(userPayload(user));
+        // learner session lasts 7 days if they do not come back
+        return res.json(userPayload(user, '7d'));
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ message: 'Server error' });
@@ -169,7 +170,8 @@ router.post('/register', async (req, res) => {
             role: 'LEARNER',
         });
 
-        return res.status(201).json(userPayload(user));
+        // same 7 day session as learner login
+        return res.status(201).json(userPayload(user, '7d'));
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot create account' });
