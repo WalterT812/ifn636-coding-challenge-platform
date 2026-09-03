@@ -9,13 +9,13 @@ const challengeSchema = new mongoose.Schema(
         },
         type:{
             type: String,
-            enum: ['Debugging', 'Feature', 'Refactoring', 'Security'],
+            enum: ['Debugging', 'Feature', 'Refactoring', 'Security'], // challenge type
             required: true,
         },
         tier: {
             type: Number,
             min: 1,
-            max: 8,
+            max: 8, // difficulty 1 to 8
             required: true,
         },
         keywords: {
@@ -46,20 +46,20 @@ const challengeSchema = new mongoose.Schema(
         },
         environment: {
             type: String,
-            default: 'Python 3',
+            default: 'Python 3', // fixed for this unit
         },
         status: {
             type: String,
-            enum: ['DRAFT', 'PUBLISHED', 'CLOSED'],
+            enum: ['DRAFT', 'PUBLISHED', 'CLOSED'], // draft until publish
             default: 'DRAFT',
         },
         challengeNumber: {
             type: String,
-            trim: true,
+            trim: true, // like CCP-CH-001, auto later
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'User', // which admin created it
         },
     },
     {

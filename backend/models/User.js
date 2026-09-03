@@ -17,16 +17,16 @@ const userSchema = new mongoose.Schema(
         },
         passwordHash: {
             type: String,
-            required: true,
+            required: true, // encrypted password, not plain text
         },
         role: {
             type: String,
-            enum: ['SUPER_ADMIN', 'ADMIN', 'USER'],
+            enum: ['SUPER_ADMIN', 'ADMIN', 'USER'], // admin or learner
             default: 'USER',
         },
         active: {
             type: Boolean,
-            default: true,
+            default: true, // false = cannot login
         },
     },
     {
