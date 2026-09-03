@@ -116,12 +116,13 @@ function App() {
   }
 
   const path = window.location.pathname
+  const publicPaths = ['/', '/login', '/register']
 
   if (path === '/register') {
     return <Register onLogin={handleLogin} />
   }
 
-  if (path === '/login') {
+  if (path === '/login' || !publicPaths.includes(path)) {
     return <LearnerLogin onLogin={handleLogin} />
   }
 
