@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Login from './Login.jsx'
 import LearnerLogin from './LearnerLogin.jsx'
 import Register from './Register.jsx'
@@ -26,9 +26,56 @@ function App() {
   const savedToken = getSavedToken()
   const [isLoggedIn, setIsLoggedIn] = useState(!!savedToken)
   const [role, setRole] = useState(getSavedRole())
-  const [page, setPage] = useState('dashboard')
+  const [path, setPath] = useState(window.location.pathname)
   const [editingChallenge, setEditingChallenge] = useState(null)
   const [errorPage, setErrorPage] = useState('')
+
+  const navigate = (next) => {
+    if (window.location.pathname !== next) {
+      window.history.pushState({}, '', next)
+    }
+    setPath(next)
+    setErrorPage('')
+  }
+
+  useEffect(() => {
+    const onPopState = () => {
+      setPath(window.location.pathname)
+      setErrorPage('')
+    }
+
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      if (path === '/') {
+        window.history.replaceState({}, '', '/login')
+        setPath('/login')
+        return
+      }
+
+      if (path.startsWith('/admin/')) {
+        window.history.replaceState({}, '', '/admin')
+        setPath('/admin')
+      }
+      return
+    }
+
+    if (isLearnerRole(role)) {
+      if (path === '/login' || path === '/register') {
+        window.history.replaceState({}, '', '/')
+        setPath('/')
+      }
+      return
+    }
+
+    if (path === '/admin' || path === '/' || path === '/login' || path === '/register') {
+      window.history.replaceState({}, '', '/admin/dashboard')
+      setPath('/admin/dashboard')
+    }
+  }, [isLoggedIn, role, path])
 
   const handleLogin = (token, rememberMe, username, userRole) => {
     if (rememberMe) {
@@ -49,9 +96,11 @@ function App() {
 
     setRole(userRole)
     setIsLoggedIn(true)
+    navigate(isLearnerRole(userRole) ? '/' : '/admin/dashboard')
   }
 
   const handleLogout = () => {
+    const logoutPath = isLearnerRole(role) ? '/login' : '/admin'
     localStorage.removeItem('token')
     localStorage.removeItem('username')
     localStorage.removeItem('role')
@@ -59,42 +108,47 @@ function App() {
     sessionStorage.removeItem('username')
     sessionStorage.removeItem('role')
     setEditingChallenge(null)
-    setPage('dashboard')
     setErrorPage('')
     setRole('')
     setIsLoggedIn(false)
+    navigate(logoutPath)
   }
 
-  const goHome = () => {
+  const goAdminHome = () => {
     setEditingChallenge(null)
-    setPage('dashboard')
-    setErrorPage('')
+    navigate('/admin/dashboard')
   }
 
   if (isLoggedIn && isLearnerRole(role)) {
-    const path = window.location.pathname
-
-    if (path === '/') {
-      return <NotFound onHome={() => window.location.assign('/login')} />
+    if (path.startsWith('/admin')) {
+      return <NotFound onHome={() => navigate('/')} />
     }
 
-    return <Challenges onLogout={handleLogout} />
+    if (path === '/') {
+      return <Challenges onLogout={handleLogout} />
+    }
+
+    if (path === '/login' || path === '/register') {
+      return <Challenges onLogout={handleLogout} />
+    }
+
+    return <NotFound onHome={() => navigate('/')} />
   }
 
   if (isLoggedIn) {
     if (errorPage === '403') {
-      return <Forbidden onHome={goHome} />
+      return <Forbidden onHome={goAdminHome} />
     }
 
     if (errorPage === '404') {
-      return <NotFound onHome={goHome} />
+      return <NotFound onHome={goAdminHome} />
     }
 
     const canManageChallenges = can(role, 'challengeManagement')
 
-    if (page === 'create') {
+    if (path === '/admin/create') {
       if (!canManageChallenges) {
-        return <Forbidden onHome={goHome} />
+        return <Forbidden onHome={goAdminHome} />
       }
 
       return (
@@ -106,23 +160,23 @@ function App() {
           onUnauthorized={handleLogout}
           onBack={() => {
             setEditingChallenge(null)
-            setPage('list')
+            navigate('/admin/challenges')
           }}
           onOpenDashboard={() => {
             setEditingChallenge(null)
-            setPage('dashboard')
+            navigate('/admin/dashboard')
           }}
           onOpenList={() => {
             setEditingChallenge(null)
-            setPage('list')
+            navigate('/admin/challenges')
           }}
         />
       )
     }
 
-    if (page === 'list') {
+    if (path === '/admin/challenges') {
       if (!canManageChallenges) {
-        return <Forbidden onHome={goHome} />
+        return <Forbidden onHome={goAdminHome} />
       }
 
       return (
@@ -130,35 +184,37 @@ function App() {
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
-          onOpenDashboard={() => setPage('dashboard')}
+          onOpenDashboard={() => navigate('/admin/dashboard')}
           onCreate={() => {
             setEditingChallenge(null)
-            setPage('create')
+            navigate('/admin/create')
           }}
           onOpenChallenge={(item) => {
             setEditingChallenge(item)
-            setPage('create')
+            navigate('/admin/create')
           }}
         />
       )
     }
 
-    return (
-      <Dashboard
-        onLogout={handleLogout}
-        canManageChallenges={canManageChallenges}
-        onOpenList={() => setPage('list')}
-      />
-    )
-  }
+    if (path === '/admin/dashboard' || path === '/admin' || path === '/' || path === '/login' || path === '/register') {
+      return (
+        <Dashboard
+          onLogout={handleLogout}
+          canManageChallenges={canManageChallenges}
+          onOpenList={() => navigate('/admin/challenges')}
+        />
+      )
+    }
 
-  const path = window.location.pathname
+    return <NotFound onHome={goAdminHome} />
+  }
 
   if (path === '/register') {
     return <Register onLogin={handleLogin} />
   }
 
-  if (path === '/admin') {
+  if (path === '/admin' || path.startsWith('/admin/')) {
     return <Login onLogin={handleLogin} />
   }
 
