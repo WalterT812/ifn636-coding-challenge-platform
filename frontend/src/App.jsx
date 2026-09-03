@@ -6,6 +6,7 @@ import Dashboard from './Dashboard.jsx'
 import ChallengeList from './ChallengeList.jsx'
 import CreateChallenge from './CreateChallenge.jsx'
 import Challenges from './Challenges.jsx'
+import { can } from './permissions.js'
 
 function getSavedToken() {
   return localStorage.getItem('token') || sessionStorage.getItem('token')
@@ -65,7 +66,9 @@ function App() {
   }
 
   if (isLoggedIn) {
-    if (page === 'create') {
+    const canManageChallenges = can(role, 'challengeManagement')
+
+    if (page === 'create' && canManageChallenges) {
       return (
         <CreateChallenge
           key={editingChallenge ? editingChallenge._id : 'new'}
@@ -87,7 +90,7 @@ function App() {
       )
     }
 
-    if (page === 'list') {
+    if (page === 'list' && canManageChallenges) {
       return (
         <ChallengeList
           onLogout={handleLogout}
