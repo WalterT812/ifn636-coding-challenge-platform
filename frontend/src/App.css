@@ -88,6 +88,7 @@ label {
 
 input[type="text"],
 input[type="password"],
+select,
 textarea {
   /* size */
   width: 100%;
@@ -198,13 +199,15 @@ textarea::placeholder {
 }
 
 .form-panel input,
+.form-panel select,
 .form-panel textarea {
   display: block;
   width: 100%;
   margin-bottom: 16px;
 }
 
-.form-panel input {
+.form-panel input,
+.form-panel select {
   height: 44px;
 }
 

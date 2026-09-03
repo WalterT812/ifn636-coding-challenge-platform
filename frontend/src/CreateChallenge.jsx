@@ -20,7 +20,13 @@ function CreateChallenge({ onLogout, onBack }) {
       <div className="form-panels">
         <div className="form-panel">
           <input type="text" placeholder="Title *" />
-          <input type="text" placeholder="Challenge Type *" />
+          <select defaultValue="">
+            <option value="">Challenge Type *</option>
+            <option value="Debugging">Debugging</option>
+            <option value="Feature">Feature</option>
+            <option value="Refactoring">Refactoring</option>
+            <option value="Security">Security</option>
+          </select>
           <input type="text" placeholder="Difficulty Tier *" />
           <input type="text" placeholder="Keywords *" />
           <textarea className="box-tall" placeholder="Description *" />
