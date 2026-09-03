@@ -21,11 +21,14 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
       try {
-        const response = await fetch('http://localhost:5001/api/challenges/published', {
-          headers: {
-            Authorization: 'Bearer ' + token,
-          },
-        })
+        const response = await fetch(
+          'http://localhost:5001/api/challenges/published/' + challengeId,
+          {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          }
+        )
 
         const data = await response.json()
 
@@ -34,13 +37,17 @@ function ChallengeDetail({ challengeId, onBack, onUnauthorized }) {
           return
         }
 
+        if (response.status === 404) {
+          setChallenge(null)
+          return
+        }
+
         if (!response.ok) {
           setMessage(data.message || 'Cannot load challenge')
           return
         }
 
-        const found = data.find((item) => item._id === challengeId)
-        setChallenge(found || null)
+        setChallenge(data)
       } catch (error) {
         setMessage('Cannot connect to server')
       }
