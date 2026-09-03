@@ -62,6 +62,11 @@ function CreateChallenge({ onLogout, onBack }) {
       <div className="form-panels">
         <div className="form-panel">
           <div className="field">
+            {/* we do not type this, the server makes CCP-CH-001, 002, ... */}
+            <input type="text" value="Challenge Number: Auto" disabled />
+          </div>
+
+          <div className="field">
             <input
               type="text"
               placeholder="Title *"

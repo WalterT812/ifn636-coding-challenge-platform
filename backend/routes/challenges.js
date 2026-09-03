@@ -4,6 +4,11 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+async function nextChallengeNumber() {
+    const count = await Challenge.countDocuments();
+    return 'CCP-CH-' + String(count + 1).padStart(3, '0');
+}
+
 // create a challenge, admin only
 router.post('/', auth, async (req, res) => {
     try {
@@ -22,6 +27,7 @@ router.post('/', auth, async (req, res) => {
             expectedResult: req.body.expectedResult,
             starterRepo: req.body.starterRepo,
             reviewCriteria: req.body.reviewCriteria,
+            challengeNumber: await nextChallengeNumber(),
             createdBy: req.user.userId,
         });
 

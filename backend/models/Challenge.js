@@ -55,7 +55,7 @@ const challengeSchema = new mongoose.Schema(
         },
         challengeNumber: {
             type: String,
-            trim: true, // like CCP-CH-001, auto later
+            trim: true, // filled by the server, e.g. CCP-CH-001
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,

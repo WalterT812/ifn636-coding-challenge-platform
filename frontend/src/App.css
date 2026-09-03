@@ -146,6 +146,10 @@ textarea::placeholder {
   color: #616b78;
 }
 
+input:disabled {
+  color: #616b78;
+}
+
 .login-box button[type="submit"] {
   /* size */
   display: block;
