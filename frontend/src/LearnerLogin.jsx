@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function Login({ onLogin }) {
+function LearnerLogin({ onLogin }) {
   const [loginName, setLoginName] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
@@ -11,8 +11,7 @@ function Login({ onLogin }) {
     setMessage('')
 
     try {
-      // call the admin login API
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch('http://localhost:5001/api/auth/learner-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,12 +25,10 @@ function Login({ onLogin }) {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message || 'Invalid email or password')
+        setMessage(data.message || 'Email/username or password is incorrect.')
         return
       }
 
-      // login ok, go to dashboard
-      // also tell App if remember me is ticked
       onLogin(data.token, rememberMe, data.user.username, data.user.role)
     } catch (error) {
       setMessage('Cannot connect to server')
@@ -40,10 +37,10 @@ function Login({ onLogin }) {
 
   return (
     <div>
-      <h1 className="login-title">Coding Challenge Platform Admin Portal</h1>
+      <h1 className="login-title">Coding Challenge Platform</h1>
 
       <form className="login-box" onSubmit={handleLogin}>
-        <h2>Admin Login</h2>
+        <h2>Learner Login</h2>
 
         <label>Email or Username:</label>
         <input
@@ -63,7 +60,6 @@ function Login({ onLogin }) {
 
         <div className="row">
           <label>
-            {/* this box is remember me */}
             <input
               type="checkbox"
               checked={rememberMe}
@@ -78,10 +74,15 @@ function Login({ onLogin }) {
 
         {message && <p className="message">{message}</p>}
 
-        <p className="note">Only authorised Admin accounts can log in.</p>
+        <p className="note">
+          Do not have an account?{' '}
+          <a className="link" href="/register">
+            Create Account
+          </a>
+        </p>
       </form>
     </div>
   )
 }
 
-export default Login
+export default LearnerLogin

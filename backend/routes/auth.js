@@ -1,10 +1,55 @@
-// this file is for login routes
+// this file is for login and register routes
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const router = express.Router();
+
+const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
+const learnerRoles = ['LEARNER', 'USER'];
+
+function isStrongPassword(password) {
+    return (
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /[0-9]/.test(password) &&
+        /[^A-Za-z0-9]/.test(password)
+    );
+}
+
+function makeToken(user) {
+    return jwt.sign(
+        {
+            userId: user._id,
+            role: user.role,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+}
+
+function userPayload(user) {
+    return {
+        token: makeToken(user),
+        user: {
+            id: user._id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+        },
+    };
+}
+
+async function findByLoginName(loginName) {
+    let user = await User.findOne({ email: loginName.toLowerCase() });
+
+    if (!user) {
+        user = await User.findOne({ username: loginName });
+    }
+
+    return user;
+}
 
 router.post('/login', async (req, res) => {
     try {
@@ -15,19 +60,13 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // user can log in with email or username
-        let user = await User.findOne({ email: loginName.toLowerCase() });
-
-        if (!user) {
-            user = await User.findOne({ username: loginName });
-        }
+        const user = await findByLoginName(loginName);
 
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
         // three admin types can use this login, learners cannot
-        const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
         if (!adminRoles.includes(user.role)) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
@@ -36,34 +75,104 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // check the hashed password
         const isMatch = await bcrypt.compare(password, user.passwordHash);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        const token = jwt.sign(
-            {
-                userId: user._id,
-                role: user.role,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        return res.json({
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                role: user.role,
-            },
-        });
+        return res.json(userPayload(user));
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/learner-login', async (req, res) => {
+    try {
+        const { email, username, password } = req.body;
+        const loginName = email || username;
+
+        if (!loginName || !password) {
+            return res.status(400).json({ message: 'Email/username or password is incorrect.' });
+        }
+
+        const user = await findByLoginName(loginName);
+
+        if (!user || !learnerRoles.includes(user.role) || !user.active) {
+            return res.status(401).json({ message: 'Email/username or password is incorrect.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Email/username or password is incorrect.' });
+        }
+
+        return res.json(userPayload(user));
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/register', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim().toLowerCase();
+        const username = String(req.body.username || '').trim();
+        const password = String(req.body.password || '');
+        const genderValue = String(req.body.gender || '').trim();
+        const fieldErrors = {};
+
+        if (!email) {
+            fieldErrors.email = 'This field is required';
+        }
+
+        if (!username) {
+            fieldErrors.username = 'This field is required';
+        }
+
+        if (!password) {
+            fieldErrors.password = 'This field is required';
+        } else if (!isStrongPassword(password)) {
+            fieldErrors.password =
+                'Password must include uppercase, lowercase, a number and a symbol';
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).json(fieldErrors);
+        }
+
+        // admin cannot create an account here
+        if (await User.findOne({ email })) {
+            fieldErrors.email = 'This email is already used';
+        }
+
+        if (await User.findOne({ username })) {
+            fieldErrors.username = 'This username is already used';
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).json(fieldErrors);
+        }
+
+        let gender = null;
+        if (genderValue === 'Male' || genderValue === 'Female' || genderValue === 'Other') {
+            gender = genderValue;
+        }
+
+        const user = await User.create({
+            email,
+            username,
+            passwordHash: await bcrypt.hash(password, 10),
+            gender,
+            role: 'LEARNER',
+        });
+
+        return res.status(201).json(userPayload(user));
+    } catch (error) {
+        console.error(error.message);
+        return res.status(400).json({ message: 'Cannot create account' });
     }
 });
 

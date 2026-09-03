@@ -1,40 +1,67 @@
 import { useState } from 'react'
 import Login from './Login.jsx'
+import LearnerLogin from './LearnerLogin.jsx'
+import Register from './Register.jsx'
 import Dashboard from './Dashboard.jsx'
 import ChallengeList from './ChallengeList.jsx'
 import CreateChallenge from './CreateChallenge.jsx'
+import Challenges from './Challenges.jsx'
+
+function getSavedToken() {
+  return localStorage.getItem('token') || sessionStorage.getItem('token')
+}
+
+function getSavedRole() {
+  return localStorage.getItem('role') || sessionStorage.getItem('role') || ''
+}
+
+function isLearnerRole(role) {
+  return role === 'LEARNER' || role === 'USER'
+}
 
 function App() {
-  // look in both places, because remember me uses localStorage
-  const savedToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+  const savedToken = getSavedToken()
   const [isLoggedIn, setIsLoggedIn] = useState(!!savedToken)
+  const [role, setRole] = useState(getSavedRole())
   const [page, setPage] = useState('dashboard')
   const [editingChallenge, setEditingChallenge] = useState(null)
 
-  const handleLogin = (token, rememberMe, username) => {
+  const handleLogin = (token, rememberMe, username, userRole) => {
     if (rememberMe) {
       localStorage.setItem('token', token)
       localStorage.setItem('username', username)
+      localStorage.setItem('role', userRole)
       sessionStorage.removeItem('token')
       sessionStorage.removeItem('username')
+      sessionStorage.removeItem('role')
     } else {
       sessionStorage.setItem('token', token)
       sessionStorage.setItem('username', username)
+      sessionStorage.setItem('role', userRole)
       localStorage.removeItem('token')
       localStorage.removeItem('username')
+      localStorage.removeItem('role')
     }
 
+    setRole(userRole)
     setIsLoggedIn(true)
   }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('username')
+    localStorage.removeItem('role')
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('username')
+    sessionStorage.removeItem('role')
     setEditingChallenge(null)
     setPage('dashboard')
+    setRole('')
     setIsLoggedIn(false)
+  }
+
+  if (isLoggedIn && isLearnerRole(role)) {
+    return <Challenges onLogout={handleLogout} />
   }
 
   if (isLoggedIn) {
@@ -83,6 +110,16 @@ function App() {
         onOpenList={() => setPage('list')}
       />
     )
+  }
+
+  const path = window.location.pathname
+
+  if (path === '/register') {
+    return <Register onLogin={handleLogin} />
+  }
+
+  if (path === '/login') {
+    return <LearnerLogin onLogin={handleLogin} />
   }
 
   return <Login onLogin={handleLogin} />
